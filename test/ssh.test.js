@@ -6,6 +6,7 @@ import { test } from 'node:test'
 import {
   buildSshArgs,
   classifySshError,
+  sshCommandFor,
   parseStatusOutput,
   probeServer,
 } from '../src/providers/ssh.js'
@@ -50,6 +51,12 @@ test('ssh arguments are array-safe and use non-interactive mode', () => {
   assert.equal(args.at(-2), 'root@vps01')
   assert.equal(args.at(-1).includes('###DISK'), true)
   assert.throws(() => buildSshArgs({ target: '-oProxyCommand=bad' }))
+})
+
+test('the copyable verification command mirrors the server settings', () => {
+  const command = sshCommandFor({ target: 'vps01', user: 'root', port: 2222, identityFile: '~/key/id_ed25519' })
+  assert.match(command, /^ssh -p 2222 -i '/u)
+  assert.match(command, /root@vps01/u)
 })
 
 test('status output parses host, load, memory, disk and warnings', () => {
@@ -116,4 +123,5 @@ test('a failed ssh call returns an offline result with a diagnosis', async () =>
   assert.equal(result.status, 'offline')
   assert.equal(result.error.code, 'auth')
   assert.match(result.error.hint, /ssh-agent|\.ssh\/config/u)
+  assert.match(result.error.command, /^ssh /u)
 })

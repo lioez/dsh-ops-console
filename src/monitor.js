@@ -236,6 +236,10 @@ export function createMonitor({ store, logger, fetchImpl = fetch, run = runCli }
         globalPromise,
       ])
 
+      if (signal().aborted || local?.error?.code === 'ABORT_ERR' || String(local?.error?.message ?? '').includes('取消') || String(gp?.error?.message ?? '').includes('取消')) {
+        return { ok: false, cancelled: true, error: '检查已取消' }
+      }
+
       if (gp.error?.code === 'rate_limited') {
         cooldownUntil = Date.now() + RATE_LIMIT_COOLDOWN_MS
         await store.updateCacheBestEffort((draft) => {

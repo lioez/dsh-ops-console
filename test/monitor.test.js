@@ -129,3 +129,12 @@ test('a Globalping API failure is stored and surfaced as a reason', async () => 
   assert.ok(result.last.reasons.some((line) => line.includes('upstream broke')))
   await failing.stop()
 })
+
+test('an aborted check leaves the previous cache untouched', async () => {
+  const site = await addSite()
+  const pending = monitor.checkSite(site)
+  await monitor.stop()
+  const result = await pending
+  assert.equal(result.cancelled, true)
+  assert.equal(store.getCache().sites[site.id], undefined)
+})

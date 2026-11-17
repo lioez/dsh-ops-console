@@ -9,6 +9,7 @@
  * @module dsh-ops-console/src/routes
  */
 
+import { pickPrivateKey } from './picker.js'
 import { emptyCache } from './state.js'
 import { buildSnapshot } from './snapshot.js'
 import {
@@ -172,6 +173,18 @@ async function handleAction(store, monitor, logger, body) {
         delete draft.servers[id]
       })
       return { ok: true }
+    }
+
+    case 'server.pickKey': {
+      const picked = await pickPrivateKey()
+      if (picked.ok) return { ok: true, path: picked.path }
+      if (picked.code === 'cancelled') return { ok: true, cancelled: true }
+      throw new ActionError(
+        400,
+        picked.code ?? 'picker_failed',
+        picked.message ?? '无法选择私钥文件',
+        picked.hint ?? '',
+      )
     }
 
     case 'server.check': {

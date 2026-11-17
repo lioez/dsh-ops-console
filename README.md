@@ -53,11 +53,28 @@ plugin_manager install_bundle → target: /absolute/path/to/dsh-ops-console
 4. 「在 itdog 打开」会用当前域名打开 itdog 现有的全国测速页（`auto_submit=1`），用于手动复核；插件不抓取 itdog。
 5. 「服务器」添加 ssh 别名/域名/IP 后会自动跑一次只读状态命令；「平台」添加 GitHub 仓库或从已发现的 Pages 项目中选择。
 
+## 状态含义
+
+- **正常**：本机 2xx/3xx，国内/海外节点没有失败，TLS 有效。
+- **降级**：网站仍可访问，但部分探测节点失败、TLS 无效/即将到期，或本机返回 401/403（可能被 WAF/鉴权拦截）。
+- **异常**：本机不可达，或返回 4xx/5xx 等非预期状态。
+- **未知**：还没有完成检测，或上一次检测被取消。
+
+站点页的「状态说明」和状态标签的提示里也有同一份定义；被取消的检测不会覆盖上一次结果。
+
+## SSH 密钥与主机指纹
+
+- **私钥路径留空时**：`ssh` 自己会读取 `~/.ssh/config`、默认密钥（`~/.ssh/id_*`）和 ssh-agent。插件不读取这些文件，也不保存密码。
+- **macOS**：添加服务器时可点「选择文件…」打开系统文件选择器；其他平台请手动填写路径。
+- 查看本机配置：`ls -la ~/.ssh`、`ssh-add -l`、`ssh -G <目标别名>`。
+- 把密钥加入 agent：`ssh-add ~/.ssh/id_ed25519`（macOS 可用 `ssh-add --apple-use-keychain`）。
+- 主机密钥未验证时，服务器详情会给出可复制的 `ssh ...` 命令；在终端运行一次、确认指纹后重试。插件不会自动关闭 host-key 校验。
+
 ## 数据与隐私
 
 - 所有配置和历史都在 `$DSH_HOME/ops-console/`（默认 `~/.dsh/ops-console/`），目录 `0700`、文件 `0600`。
 - **不保存** GitHub / Cloudflare Token、SSH 密码或私钥内容；复用本机已有 CLI/SSH 凭据。
-- 不读取 `~/.ssh/config` 或 `~/.ssh` 下的私钥；SSH 自己解析别名。
+- 插件不读取 `~/.ssh/config` 或 `~/.ssh` 下的私钥；这些由 `ssh` 自己解析。
 - 站点 URL 的 query/fragment 会被移除；Globalping 只收到 hostname 和路径，不会收到 query 中的令牌。
 - SSH 命令固定为只读状态采集，不执行用户输入；`execFile` 参数数组，不经 shell。
 - 远端写操作（重启、部署、清缓存、rerun workflow）不在 v1 中。
@@ -65,7 +82,7 @@ plugin_manager install_bundle → target: /absolute/path/to/dsh-ops-console
 ## 数据源
 
 - 本机探测：Node `http`/`https`，记录 DNS、TCP、TLS、首字节（含连接）和总耗时。
-- 多地域探测：[Globalping](https://globalping.io/docs/api.globalping.io) 公共 API。验证时中国有 34 个节点、全球 5506 个；匿名额度 250 次/小时。
+- 多地域探测：[Globalping](https://globalping.io/docs/api.globalping.io) 公共 API。验证时中国有 34 个节点、全球 5506 个；匿名额度 250 次/小时，**按本机公网出口 IP 计量，不绑定账号**，同一 IP 的其他使用会共用。
 - 手动复核：[itdog](https://www.itdog.cn/http/)。itdog 没有公开 API，页面依赖前端 JS/WebSocket 与 Cookie 反爬；插件不抓取、不 iframe，只提供预填深链。
 
 ## 架构
@@ -102,7 +119,7 @@ node --test test/*.test.js
 node --check client.js
 ```
 
-47 个单元测试覆盖状态、校验、本机探测、Globalping、SSH、GitHub/Cloudflare 解析、快照与动作路由。CI 在 Node 22 / 24 上跑同一套测试。
+单元测试覆盖状态、校验、本机探测、Globalping、SSH、GitHub/Cloudflare 解析、快照、动作路由和原生选择器。CI 在 Node 22 / 24 上跑同一套测试。
 
 发布前还可以运行：
 

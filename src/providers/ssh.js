@@ -61,6 +61,34 @@ export function buildSshArgs(server) {
 }
 
 /**
+ * Quote one shell argument for a command the user copies into a terminal.
+ * @param {string} value
+ * @returns {string}
+ */
+function shellQuote(value) {
+  return `'${String(value).replace(/'/gu, `'\\''`)}'`
+}
+
+/**
+ * A non-BatchMode command the user can run in a terminal to inspect or confirm
+ * the host key. It includes the same identity and port as the plugin check.
+ *
+ * @param {object} server
+ * @returns {string}
+ */
+export function sshCommandFor(server) {
+  const args = ['ssh']
+  if (Number.isInteger(server?.port) && server.port > 0) args.push('-p', String(server.port))
+  if (typeof server?.identityFile === 'string' && server.identityFile.trim() !== '') {
+    args.push('-i', shellQuote(expandHome(server.identityFile)))
+  }
+  const target = String(server?.target ?? '')
+  const destination = typeof server?.user === 'string' && server.user !== '' ? `${server.user}@${target}` : target
+  args.push(shellQuote(destination))
+  return args.join(' ')
+}
+
+/**
  * @param {string} value
  * @returns {number|null}
  */
@@ -150,31 +178,31 @@ export function parseStatusOutput(raw) {
  * @param {object} result runCli result.
  * @returns {{ code: string, message: string, hint: string }}
  */
-export function classifySshError(result) {
+export function classifySshError(result, server = null) {
   if (!result.installed) {
     return { code: 'ssh_missing', message: '本机没有可执行的 ssh', hint: '安装 OpenSSH，或确认 ssh 在 PATH 中。' }
   }
   if (result.timedOut) {
-    return { code: 'timeout', message: 'SSH 连接超时', hint: '检查主机地址、端口和网络；可以先在终端执行一次 ssh 了解详细原因。' }
+    return { code: 'timeout', message: 'SSH 连接超时', hint: '检查主机地址、端口和网络；可以先在终端执行一次下面这条命令了解详细原因。', command: server ? sshCommandFor(server) : '' }
   }
   if (result.aborted) return { code: 'cancelled', message: 'SSH 检测已取消', hint: '' }
   const haystack = `${result.stderr ?? ''}\n${result.error ?? ''}`
   if (/Host key verification failed|REMOTE HOST IDENTIFICATION HAS CHANGED/iu.test(haystack)) {
-    return { code: 'host_key', message: 'SSH 主机密钥未验证', hint: '先在终端手动连接一次并确认指纹；插件不会自动关闭 host key 校验。' }
+    return { code: 'host_key', message: 'SSH 主机密钥未验证', hint: '在终端运行下面这条命令，确认主机指纹后重试。插件不会自动关闭 host key 校验。', command: server ? sshCommandFor(server) : '' }
   }
   if (/Permission denied|publickey|no supported authentication/iu.test(haystack)) {
-    return { code: 'auth', message: 'SSH 认证失败', hint: '确认密钥已加入 ssh-agent 或 ~/.ssh/config，并且该用户允许登录。' }
+    return { code: 'auth', message: 'SSH 认证失败', hint: '确认密钥已加入 ssh-agent 或 ~/.ssh/config，并且该用户允许登录。', command: server ? sshCommandFor(server) : '' }
   }
   if (/Could not resolve hostname|Name or service not known|nodename nor servname/iu.test(haystack)) {
-    return { code: 'dns', message: '无法解析服务器地址', hint: '检查 ssh 别名或域名。' }
+    return { code: 'dns', message: '无法解析服务器地址', hint: '检查 ssh 别名或域名。', command: server ? sshCommandFor(server) : '' }
   }
   if (/Connection refused/iu.test(haystack)) {
-    return { code: 'refused', message: 'SSH 端口拒绝连接', hint: '确认端口和 sshd 是否在运行。' }
+    return { code: 'refused', message: 'SSH 端口拒绝连接', hint: '确认端口和 sshd 是否在运行。', command: server ? sshCommandFor(server) : '' }
   }
   if (/Connection timed out|Operation timed out|No route to host/iu.test(haystack)) {
-    return { code: 'timeout', message: 'SSH 连接超时', hint: '检查防火墙、端口和网络。' }
+    return { code: 'timeout', message: 'SSH 连接超时', hint: '检查防火墙、端口和网络。', command: server ? sshCommandFor(server) : '' }
   }
-  return { code: 'ssh_error', message: commandFailure(result, 'SSH 检测失败'), hint: '展开原始输出查看 ssh 的详细错误。' }
+  return { code: 'ssh_error', message: commandFailure(result, 'SSH 检测失败'), hint: '展开原始输出查看 ssh 的详细错误。', command: server ? sshCommandFor(server) : '' }
 }
 
 /**
@@ -212,7 +240,7 @@ export async function probeServer(server, options = {}) {
       checkedAt,
       durationMs: Date.now() - started,
       status: 'offline',
-      error: classifySshError(result),
+      error: classifySshError(result, server),
       raw: String(result.stderr ?? '').slice(0, SSH_RAW_LIMIT),
       hostname: '',
       os: '',

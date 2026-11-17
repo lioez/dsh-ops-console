@@ -51,10 +51,27 @@ Refresh the Web GUI after installation. The entry appears in the left sidebar as
   access to your Pages projects. v1 covers Pages only; use the dashboard for
   Zones/DNS/Workers.
 - **SSH**: key-based or ssh-agent login must work non-interactively. The plugin
-  does not collect passwords, does not read `~/.ssh/config`, and does not weaken
-  host-key verification.
+  does not collect passwords or read `~/.ssh/config`; `ssh` resolves those itself.
+  Host-key verification is never weakened.
 - **Website checks**: no API key. Globalping's anonymous quota applies; when it
   is exhausted, the local probe still runs.
+
+## Status meanings
+
+- **Up**: local 2xx/3xx, no failed CN/overseas probes, valid TLS.
+- **Degraded**: still reachable, but some probes failed, TLS is invalid/expiring, or the local probe got 401/403 (WAF/auth).
+- **Down**: unreachable locally, or an unexpected 4xx/5xx status.
+- **Unknown**: no completed check yet, or the last check was cancelled.
+
+The Sites tab contains the same guide, and status pills carry the definition as a tooltip. A cancelled check does not overwrite the previous result.
+
+## SSH keys and host fingerprints
+
+- With an empty identity path, `ssh` itself uses `~/.ssh/config`, default keys (`~/.ssh/id_*`) and ssh-agent. The plugin does not read those files and never stores passwords.
+- On macOS, **Choose file…** opens the system file chooser. Other platforms need a typed path.
+- Inspect `ls -la ~/.ssh`, `ssh-add -l`, and `ssh -G <alias>`.
+- Add a key with `ssh-add ~/.ssh/id_ed25519` (macOS may use `--apple-use-keychain`).
+- When the host key is not verified, server details show a copyable `ssh ...` command. Run it once, confirm the fingerprint, then retry. The plugin never disables host-key checking.
 
 ## Privacy
 
@@ -68,6 +85,8 @@ removed from monitored URLs before sending a target to Globalping. Remote writes
 
 - Local: Node `http`/`https`, recording DNS, TCP, TLS, first byte and total time.
 - Multi-region: [Globalping](https://globalping.io/docs/api.globalping.io).
+  The anonymous 250/hour quota is counted per public egress IP, not tied to an
+  account; other clients behind the same IP share it.
 - Manual: [itdog](https://www.itdog.cn/http/) deep link. itdog has no public API;
   the plugin does not scrape it or embed it in an iframe.
 

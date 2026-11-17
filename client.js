@@ -263,6 +263,12 @@ window.__ModuleLoader__.load({
           tlsProtocol: '协议',
           tlsTitle: 'TLS 证书',
           tlsValid: '证书状态',
+          statusHint: '「降级」表示仍能访问，但部分探测节点失败、TLS 证书异常或返回 401/403；「异常」表示本机不可达或返回非预期状态。',
+          statusLegend: '状态说明',
+          statusUpDesc: '本机 2xx/3xx，国内/海外节点没有失败，TLS 有效。',
+          statusDegradedDesc: '网站仍可访问，但部分节点失败、TLS 无效/即将到期，或本机返回 401/403（可能被 WAF/鉴权拦截）。',
+          statusDownDesc: '本机不可达，或返回 4xx/5xx 等非预期状态。',
+          statusUnknownDesc: '尚未完成检测，或上一次检测被取消。',
           toggleEnabled: '启用状态',
           total: '总计',
           ttfb: '首字节（含连接）',
@@ -290,7 +296,21 @@ window.__ModuleLoader__.load({
           failedUnits: '失败服务',
           failedUnitsHint: '有失败的服务，请检查 systemd',
           failedUnitsValue: '{n} 项',
-          formHint: '使用本机 ssh 密钥或 ssh-agent 登录；不会读取 ~/.ssh/config，也不保存密码。',
+          formHint: '私钥留空时由 ssh 自己读取 ~/.ssh/config、默认密钥和 ssh-agent；插件不读取这些文件，也不保存密码。',
+          pickKey: '选择文件…',
+          pickKeyBusy: '选择中…',
+          pickKeyHint: 'macOS 会打开系统文件选择器；其他系统请手动填写路径。',
+          copyCommand: '复制',
+          keyHelpTitle: '本机 SSH 密钥怎么用',
+          keyHelpIntro: '私钥路径留空时，由 ssh 自己使用 ~/.ssh/config、默认密钥（~/.ssh/id_*）和 ssh-agent。插件不读取这些文件，也不保存密码。',
+          keyHelpList: '查看 ~/.ssh 目录：',
+          keyHelpAgent: '查看 ssh-agent 已加载的密钥：',
+          keyHelpConfig: '查看某个目标实际使用的 hostname/user/port/identityFile：',
+          keyHelpManage: '把密钥加入 agent（macOS 可加 --apple-use-keychain 存入钥匙串）：',
+          keyHelpPermissions: '私钥权限建议 600：',
+          keyHelpNote: '如果 ssh-add -l 提示 agent 未启动，先在终端执行 eval "$(ssh-agent -s)"。',
+          verifyCommandHint: '在终端运行下面这条命令，确认主机指纹/登录后再点检测：',
+          verifyCommand: '终端验证命令',
           hostname: '主机名',
           identityLabel: '私钥路径（可选）',
           identityNote: '私钥：{path}',
@@ -406,6 +426,8 @@ window.__ModuleLoader__.load({
           probeUnit: '{n} 个',
           quotaFetched: '最近获取 {time}',
           quotaHint: '配额由 Globalping 提供，本机探测不计入。',
+          quotaBinding: '匿名 API 配额，按本机公网出口 IP 计量，不绑定 DSH/GitHub 账号；同一出口 IP 的其他使用会共用这个额度。',
+          quotaAnonymous: '匿名 · 未绑定账号',
           quotaTitle: 'Globalping 配额',
           quotaUnavailable: '还没有配额信息。',
           refreshConnections: '刷新连接',
@@ -664,9 +686,15 @@ window.__ModuleLoader__.load({
           tlsProtocol: 'Protocol',
           tlsTitle: 'TLS certificate',
           tlsValid: 'Certificate status',
+          statusHint: '"Degraded" means the site is still reachable but some probes failed, TLS is invalid/expiring, or the local probe got 401/403. "Down" means the local probe is unreachable or got an unexpected status.',
+          statusLegend: 'Status guide',
+          statusUpDesc: 'Local 2xx/3xx, no failed CN/overseas probes, valid TLS.',
+          statusDegradedDesc: 'Still reachable, but some probes failed, TLS is invalid/expiring, or the local probe got 401/403 (WAF/auth).',
+          statusDownDesc: 'Unreachable locally, or an unexpected 4xx/5xx status.',
+          statusUnknownDesc: 'No completed check yet, or the last check was cancelled.',
           toggleEnabled: 'Enabled state',
           total: 'Total',
-          ttfb: '首字节（含连接）',
+          ttfb: 'First byte (incl. connect)',
           unnamed: 'Unnamed website',
           uptime: 'Uptime',
           urlLabel: 'URL',
@@ -691,7 +719,21 @@ window.__ModuleLoader__.load({
           failedUnits: 'Failed units',
           failedUnitsHint: 'Some systemd units failed',
           failedUnitsValue: '{n}',
-          formHint: 'Uses the local SSH key or ssh-agent. ~/.ssh/config is not read and no password is stored.',
+          formHint: 'When the identity path is empty, ssh resolves ~/.ssh/config, default keys and ssh-agent itself; the plugin does not read those files and never stores passwords.',
+          pickKey: 'Choose file…',
+          pickKeyBusy: 'Choosing…',
+          pickKeyHint: 'macOS opens the system file chooser; other platforms need a typed path.',
+          copyCommand: 'Copy',
+          keyHelpTitle: 'How local SSH keys are used',
+          keyHelpIntro: 'With an empty identity path, ssh itself uses ~/.ssh/config, default keys (~/.ssh/id_*) and ssh-agent. The plugin does not read those files and never stores passwords.',
+          keyHelpList: 'Inspect the ~/.ssh directory:',
+          keyHelpAgent: 'List keys loaded in ssh-agent:',
+          keyHelpConfig: 'Show the effective hostname/user/port/identityFile for a target:',
+          keyHelpManage: 'Add a key to the agent (macOS may use --apple-use-keychain):',
+          keyHelpPermissions: 'Recommended private-key permissions (600):',
+          keyHelpNote: 'If ssh-add -l says the agent is not running, run eval "$(ssh-agent -s)" in a terminal first.',
+          verifyCommandHint: 'Run this command in a terminal, confirm the host key/login, then retry:',
+          verifyCommand: 'Terminal verification command',
           hostname: 'Hostname',
           identityLabel: 'Identity file (optional)',
           identityNote: 'Identity file: {path}',
@@ -807,6 +849,8 @@ window.__ModuleLoader__.load({
           probeUnit: '{n}',
           quotaFetched: 'Last fetched {time}',
           quotaHint: 'The quota comes from Globalping; local probes do not count.',
+          quotaBinding: 'Anonymous API quota, counted per public egress IP. It is not tied to a DSH/GitHub account, and other clients behind the same IP share it.',
+          quotaAnonymous: 'Anonymous · no account',
           quotaTitle: 'Globalping quota',
           quotaUnavailable: 'No quota information yet.',
           refreshConnections: 'Refresh connections',
@@ -1254,7 +1298,7 @@ window.__ModuleLoader__.load({
       }, [busyMap]);
 
       /** fetch + JSON + timeout + uniform error shape */
-      const requestJson = useCallback(async (path, init) => {
+      const requestJson = useCallback(async (path, init, timeoutMs) => {
         const controller = new AbortController();
         const entry = { controller, timedOut: false };
         controllersRef.current.add(entry);
@@ -1265,7 +1309,7 @@ window.__ModuleLoader__.load({
           } catch (err) {
             /* ignore */
           }
-        }, FETCH_TIMEOUT_MS);
+        }, Number.isFinite(timeoutMs) ? timeoutMs : FETCH_TIMEOUT_MS);
         try {
           const response = await fetch(path, {
             credentials: 'same-origin',
@@ -1367,12 +1411,12 @@ window.__ModuleLoader__.load({
         };
       }, [fetchSnapshot]);
 
-      const postAction = useCallback((payload) => {
+      const postAction = useCallback((payload, timeoutMs) => {
         return requestJson(API_ACTION, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
-        });
+        }, timeoutMs);
       }, [requestJson]);
 
       const setBusyKey = useCallback((key, value) => {
@@ -1396,7 +1440,7 @@ window.__ModuleLoader__.load({
           setError((previous) => (previous && previous.source === 'action' ? null : previous));
         }
         try {
-          const result = await postAction(payload);
+          const result = await postAction(payload, opts.timeoutMs);
           if (!mountedRef.current) return null;
           const response = result && typeof result === 'object' ? result : { ok: true };
           if (response.ok === false) throw errorFromPayload(response, 'rejected');
@@ -1416,6 +1460,13 @@ window.__ModuleLoader__.load({
         } catch (err) {
           if (!mountedRef.current || isAbortError(err)) return null;
           setError({ source: 'action', ...classifyError(err), at: Date.now() });
+          if (typeof opts.onError === 'function') {
+            try {
+              opts.onError(err);
+            } catch (callbackError) {
+              /* an error callback must not mask the action failure */
+            }
+          }
           return null;
         } finally {
           setBusyKey(key, false);
@@ -1692,10 +1743,31 @@ window.__ModuleLoader__.load({
       }, props.children);
     }
 
+    const SITE_STATUS_DESCRIPTIONS = {
+      up: 'sites.statusUpDesc',
+      degraded: 'sites.statusDegradedDesc',
+      down: 'sites.statusDownDesc',
+      unknown: 'sites.statusUnknownDesc',
+    };
+
     function SiteStatePill(props) {
       const { t } = useI18n();
       const value = props.status || 'unknown';
-      return h(Pill, { tone: siteTone(value) }, statusLabel(t, value));
+      return h(Pill, {
+        tone: siteTone(value),
+        title: t(SITE_STATUS_DESCRIPTIONS[value] || 'sites.statusUnknownDesc'),
+      }, statusLabel(t, value));
+    }
+
+    function SiteStatusLegend() {
+      const { t } = useI18n();
+      return h('details', { className: 'ops-legend' },
+        h('summary', null, t('sites.statusLegend')),
+        h('ul', { className: 'ops-legend-list' },
+          h('li', null, h('strong', null, t('status.up')), ' — ', t('sites.statusUpDesc')),
+          h('li', null, h('strong', null, t('status.degraded')), ' — ', t('sites.statusDegradedDesc')),
+          h('li', null, h('strong', null, t('status.down')), ' — ', t('sites.statusDownDesc')),
+          h('li', null, h('strong', null, t('status.unknown')), ' — ', t('sites.statusUnknownDesc'))));
     }
 
     function ServerStatePill(props) {
@@ -2455,6 +2527,10 @@ window.__ModuleLoader__.load({
             title: t('sites.deleteConfirm'),
           }))),
       h(SiteMetrics, { site, now: props.now, locale: props.locale }),
+      (status === 'degraded' || status === 'down') && asArray(last.reasons).length > 0
+        ? h('p', { className: 'ops-status-reasons' },
+          t('sites.reasons') + ': ' + asArray(last.reasons).slice(0, 2).join(' · '))
+        : null,
       site.enabled === false ? h('p', { className: 'ops-muted ops-small' }, t('sites.disabledNote')) : null,
       expanded ? h(SiteDetails, { site, now: props.now, locale: props.locale }) : null);
     }
@@ -2467,6 +2543,8 @@ window.__ModuleLoader__.load({
       const busyAll = props.ops.isBusy('site.check:all');
       return h('div', { className: 'ops-tab-body' },
         h(AddSiteForm, { ops: props.ops }),
+        h('p', { className: 'ops-form-hint' }, t('sites.statusHint')),
+        h(SiteStatusLegend),
         h('div', { className: 'ops-toolbar' },
           h('span', { className: 'ops-muted' },
             t('sites.countLabel', { n: sites.length, up: upCount, issue: issueCount })),
@@ -2503,6 +2581,27 @@ window.__ModuleLoader__.load({
         props.hint ? h('span', { className: 'ops-metric-hint' }, props.hint) : null);
     }
 
+    function ServerKeyHelp(props) {
+      const { t } = useI18n();
+      const target = String(props.target || '').trim() || '<别名或 user@host>';
+      const rows = [
+        { command: 'ls -la ~/.ssh', label: t('servers.keyHelpList') },
+        { command: 'ssh-add -l', label: t('servers.keyHelpAgent') },
+        { command: 'ssh -G ' + target, label: t('servers.keyHelpConfig') },
+        { command: 'ssh-add ~/.ssh/id_ed25519', label: t('servers.keyHelpManage') },
+        { command: 'chmod 600 ~/.ssh/id_ed25519', label: t('servers.keyHelpPermissions') },
+      ];
+      return h('details', { className: 'ops-legend ops-key-help' },
+        h('summary', null, t('servers.keyHelpTitle')),
+        h('p', { className: 'ops-legend-text' }, t('servers.keyHelpIntro')),
+        rows.map((row, index) => h('div', { key: index, className: 'ops-help-row' },
+          h('span', { className: 'ops-muted ops-small' }, row.label),
+          h('div', { className: 'ops-code-row' },
+            h('code', { className: 'ops-code ops-help-command' }, row.command),
+            h(CopyButton, { value: row.command, label: t('servers.copyCommand') })))),
+        h('p', { className: 'ops-muted ops-small' }, t('servers.keyHelpNote')));
+    }
+
     function AddServerForm(props) {
       const { t } = useI18n();
       const [label, setLabel] = useState('');
@@ -2511,7 +2610,17 @@ window.__ModuleLoader__.load({
       const [port, setPort] = useState('');
       const [identityFile, setIdentityFile] = useState('');
       const [formError, setFormError] = useState('');
+      const [pickError, setPickError] = useState('');
       const busy = props.ops.isBusy('server.add');
+      const busyPick = props.ops.isBusy('server.pickKey');
+      const pickKey = async () => {
+        setPickError('');
+        const result = await props.ops.runAction('server.pickKey', { type: 'server.pickKey' }, {
+          timeoutMs: 180000,
+          onError: (err) => setPickError([err && err.message, err && err.hint].filter(Boolean).join(' — ')),
+        });
+        if (result && typeof result.path === 'string' && result.path !== '') setIdentityFile(result.path);
+      };
       const onSubmit = async (event) => {
         event.preventDefault();
         if (busy) return;
@@ -2591,24 +2700,33 @@ window.__ModuleLoader__.load({
               disabled: busy,
               inputMode: 'numeric',
             })),
-          h(Field, { label: t('servers.identityLabel'), className: 'ops-field-grow' },
-            h('input', {
-              className: 'ops-input',
-              type: 'text',
-              value: identityFile,
-              placeholder: t('servers.identityPlaceholder'),
-              onChange: (event) => setIdentityFile(event.target.value),
-              disabled: busy,
-              autoComplete: 'off',
-              spellCheck: false,
-            })),
+          h(Field, { label: t('servers.identityLabel'), className: 'ops-field-grow', hint: t('servers.pickKeyHint') },
+            h('div', { className: 'ops-input-with-button' },
+              h('input', {
+                className: 'ops-input',
+                type: 'text',
+                value: identityFile,
+                placeholder: t('servers.identityPlaceholder'),
+                onChange: (event) => setIdentityFile(event.target.value),
+                disabled: busy || busyPick,
+                autoComplete: 'off',
+                spellCheck: false,
+              }),
+              h('button', {
+                type: 'button',
+                className: 'ops-btn',
+                onClick: pickKey,
+                disabled: busy || busyPick,
+              }, busyPick ? t('servers.pickKeyBusy') : t('servers.pickKey')))),
           h('button', {
             type: 'submit',
             className: 'ops-btn ops-btn-primary',
             disabled: busy,
           }, busy ? t('servers.addBusy') : t('servers.addSubmit'))),
         h('p', { className: 'ops-form-hint' }, t('servers.formHint')),
-        h(InlineError, null, formError));
+        h(InlineError, null, formError),
+        h(InlineError, null, pickError),
+        h(ServerKeyHelp, { target }));
     }
 
     function ServerMetrics(props) {
@@ -2669,6 +2787,17 @@ window.__ModuleLoader__.load({
         }));
     }
 
+    function SshErrorCommand(props) {
+      const { t } = useI18n();
+      const error = asObject(props.error);
+      if (typeof error.command !== 'string' || error.command === '') return null;
+      return h('div', { className: 'ops-ssh-command' },
+        h('p', { className: 'ops-muted ops-small' }, t('servers.verifyCommandHint')),
+        h('div', { className: 'ops-code-row' },
+          h('code', { className: 'ops-code ops-help-command', title: error.command }, error.command),
+          h(CopyButton, { value: error.command, label: t('common.copy') })));
+    }
+
     function ServerDetails(props) {
       const { t, locale } = useI18n();
       const last = asObject(props.server.last);
@@ -2677,7 +2806,8 @@ window.__ModuleLoader__.load({
         last.error ? h('div', { className: 'ops-error-block' },
           h('h4', { className: 'ops-subtitle' }, t('servers.errorTitle')),
           h('p', { className: 'ops-inline-error' }, errorMessageText(last.error)),
-          h('p', { className: 'ops-muted ops-small' }, errorHintText(last.error) || t('servers.sshHint'))) : null,
+          h('p', { className: 'ops-muted ops-small' }, errorHintText(last.error) || t('servers.sshHint')),
+          h(SshErrorCommand, { error: last.error })) : null,
         warnings.length > 0
           ? h('div', { className: 'ops-error-block' },
             h('h4', { className: 'ops-subtitle' }, t('servers.warnings')),
@@ -2759,7 +2889,9 @@ window.__ModuleLoader__.load({
             : h(ServerMetrics, { server, now: props.now, locale: props.locale }))
           : h('p', { className: 'ops-muted' }, t('servers.sshHint')),
         last.error && !expanded
-          ? h('p', { className: 'ops-inline-error ops-small' }, errorMessageText(last.error))
+          ? h('div', { className: 'ops-inline-error ops-small' },
+            h('p', null, errorMessageText(last.error)),
+            h(SshErrorCommand, { error: last.error }))
           : null,
         server.identityFile
           ? h('p', { className: 'ops-muted ops-small' },
@@ -3506,6 +3638,9 @@ window.__ModuleLoader__.load({
                 t('settings.quotaFetched', { time: formatRelative(t, quota.fetchedAt, props.now) }))
               : null)
           : h('p', { className: 'ops-muted' }, t('settings.quotaUnavailable')),
+        h('div', { className: 'ops-quota-binding' },
+          h(Pill, { tone: 'idle' }, t('settings.quotaAnonymous')),
+          h('span', { className: 'ops-muted ops-small' }, t('settings.quotaBinding'))),
         h('p', { className: 'ops-form-hint' }, t('settings.quotaHint')));
     }
 
@@ -3889,6 +4024,19 @@ window.__ModuleLoader__.load({
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
 }
+.ops-legend { border: 1px solid var(--ops-border); border-radius: 8px; padding: 7px 10px; font-size: 11.5px; color: var(--ops-text-secondary); }
+.ops-legend summary { cursor: pointer; font-weight: 500; color: var(--ops-text); }
+.ops-legend-list { margin: 7px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.ops-legend-list strong { color: var(--ops-text); }
+.ops-legend-text { margin: 8px 0 6px; line-height: 1.55; }
+.ops-key-help { margin-top: 2px; }
+.ops-help-row { display: flex; flex-direction: column; gap: 2px; margin-top: 7px; }
+.ops-help-command { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ops-ssh-command { display: flex; flex-direction: column; gap: 4px; margin-top: 7px; width: 100%; }
+.ops-code-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.ops-code-row .ops-code { flex: 1 1 auto; min-width: 0; }
+.ops-code-row .ops-btn { flex: none; }
+.ops-status-reasons { margin: 0; font-size: 11.5px; line-height: 1.5; color: var(--ops-warn); }
 .ops-dot-sep { width: 3px; height: 3px; border-radius: 50%; background: var(--ops-border-strong); display: inline-block; flex: none; }
 
 /* Header */
@@ -4213,6 +4361,7 @@ polyline.ops-spark-line.ops-spark-globalMs { stroke: var(--ops-success); }
 .ops-cache-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .ops-cache-row + .ops-cache-row { padding-top: 10px; border-top: 1px solid var(--ops-border); }
 .ops-quota { display: flex; flex-direction: column; gap: 5px; }
+.ops-quota-binding { display: flex; align-items: flex-start; gap: 7px; flex-wrap: wrap; margin-top: 3px; }
 .ops-quota-value { font-size: 18px; font-weight: 600; }
 .ops-quota p { margin: 0; }
 .ops-segmented { display: inline-flex; border: 1px solid var(--ops-border); border-radius: 8px; overflow: hidden; background: var(--ops-layer-2); }
