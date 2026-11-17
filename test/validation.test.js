@@ -15,6 +15,8 @@ import {
   normalizeServerTarget,
   normalizeSettings,
   normalizeSiteUrl,
+  CN_CITY_CHOICES,
+  updateServer,
 } from '../src/validation.js'
 
 test('bare site URLs default to https and drop query/credentials', () => {
@@ -89,4 +91,29 @@ test('config loading drops invalid entries instead of failing', () => {
   assert.equal(config.cloudflare.projects.length, 1)
   // Invalid settings degrade to defaults.
   assert.equal(config.settings.intervalMinutes, 15)
+})
+
+test('server updates preserve identity and can change every connection field', () => {
+  const original = createServer({ label: 'old', target: 'old.example.com', user: '', identityFile: '' })
+  const updated = updateServer(original, {
+    label: 'new',
+    target: 'new.example.com',
+    user: 'root',
+    port: 2222,
+    identityFile: '~/.ssh/id_ed25519',
+  })
+  assert.equal(updated.id, original.id)
+  assert.equal(updated.createdAt, original.createdAt)
+  assert.equal(updated.label, 'new')
+  assert.equal(updated.target, 'new.example.com')
+  assert.equal(updated.user, 'root')
+  assert.equal(updated.port, 2222)
+  assert.equal(updated.identityFile, '~/.ssh/id_ed25519')
+})
+
+test('CN city setting accepts a known city and rejects unknown values', () => {
+  assert.equal(normalizeSettings({ cnCity: 'Shanghai' }).cnCity, 'Shanghai')
+  assert.equal(normalizeSettings({ cnCity: '' }).cnCity, '')
+  assert.throws(() => normalizeSettings({ cnCity: 'Nowhere' }), ValidationError)
+  assert.ok(CN_CITY_CHOICES.includes("Xi'an"))
 })

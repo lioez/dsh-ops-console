@@ -218,6 +218,7 @@ export function createMonitor({ store, logger, fetchImpl = fetch, run = runCli }
           })
         : probeGlobalping(site, {
             cnProbes: settings.cnProbes,
+            cnCity: settings.cnCity,
             globalCountries: settings.globalCountries,
             timeoutMs: 30_000,
             signal: signal(),
@@ -299,12 +300,17 @@ export function createMonitor({ store, logger, fetchImpl = fetch, run = runCli }
    * @param {object} server
    * @returns {Promise<object>}
    */
-  async function checkServer(server) {
+  async function checkServer(server, options = {}) {
     if (pending.servers.has(server.id)) return { ok: true, skipped: true, reason: 'already-pending' }
     if (isAborted()) return { ok: false, error: 'cancelled' }
     pending.servers.add(server.id)
     try {
-      const last = await probeServer(server, { timeoutMs: 20_000, signal: signal(), run })
+      const last = await probeServer(server, {
+        timeoutMs: 20_000,
+        signal: signal(),
+        run,
+        password: typeof options.password === 'string' ? options.password : '',
+      })
       const point = {
         at: last.checkedAt,
         status: last.status,

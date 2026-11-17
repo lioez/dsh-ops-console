@@ -6,6 +6,10 @@
 - Added a native macOS private-key file picker for new SSH servers.
 - Fixed the picker/form layout so the key field and submit button stay on one row.
 - Detect private keys that are too permissive before running ssh and return the exact chmod command.
+- Added server editing (label, target, user, port, key) and a one-shot password option for manual checks.
+- Preserved the add-server form draft across tab switches; passwords are never stored.
+- Collapsed server cards to address, status and a one-line summary; full metrics moved under Details.
+- Added an optional mainland-China city filter for Globalping probes.
 - Added SSH key-management help and a copyable host-key verification command.
 - Explained that Globalping's anonymous quota is counted per public egress IP, not per account.
 - Cancelled probes no longer overwrite the previous site result with a false down/degraded state.

@@ -60,6 +60,29 @@ test('the copyable verification command mirrors the server settings', () => {
   assert.match(command, /root@vps01/u)
 })
 
+test('password mode uses askpass instead of BatchMode and does not pass a key', () => {
+  const args = buildSshArgs({ target: 'vps01', identityFile: '/tmp/id' }, { password: true })
+  assert.equal(args.includes('BatchMode=yes'), false)
+  assert.equal(args.includes('-i'), false)
+  assert.ok(args.includes('PubkeyAuthentication=no'))
+})
+
+test('a one-shot password is passed through askpass and never stored in the result', async () => {
+  let captured
+  const run = async (name, args, options) => {
+    captured = { name, args, options }
+    return { ok: true, installed: true, stdout: output, stderr: '', code: 0, error: '' }
+  }
+  const result = await probeServer({ target: 'vps01' }, { run, password: 'p@ss word' })
+  assert.equal(result.status, 'online')
+  assert.equal(captured.name, 'ssh')
+  assert.equal(captured.options.env.OPS_CONSOLE_SSH_PASSWORD, 'p@ss word')
+  assert.match(captured.options.env.SSH_ASKPASS, /askpass\.sh$/u)
+  assert.equal(captured.options.env.SSH_ASKPASS_REQUIRE, 'force')
+  assert.equal(captured.args.includes('BatchMode=yes'), false)
+  assert.equal(JSON.stringify(result).includes('p@ss word'), false)
+})
+
 test('status output parses host, load, memory, disk and warnings', () => {
   const parsed = parseStatusOutput(output)
   assert.equal(parsed.hostname, 'vps01')

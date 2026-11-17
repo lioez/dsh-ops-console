@@ -26,11 +26,18 @@ export const LIMITS = Object.freeze({
   globalCountries: 4,
 })
 
+/** Optional mainland-China city filter for Globalping. Empty means any CN city. */
+export const CN_CITY_CHOICES = Object.freeze([
+  'Beijing', 'Shanghai', 'Guangzhou', 'Shenzhen', 'Chengdu', 'Hangzhou',
+  'Wuhan', 'Nanjing', 'Chongqing', 'Tianjin', 'Suzhou', "Xi'an",
+])
+
 /** Settings defaults. Frozen; callers always receive a fresh copy. */
 export const DEFAULT_SETTINGS = Object.freeze({
   monitorEnabled: true,
   intervalMinutes: 15,
   cnProbes: 2,
+  cnCity: '',
   globalCountries: Object.freeze(['US', 'DE']),
   historyPoints: 60,
   accountId: '',
@@ -266,6 +273,26 @@ export function createServer(input) {
 }
 
 /**
+ * Validate an edit to an existing server while preserving its identity.
+ * @param {object} current restored server record.
+ * @param {{ label?: unknown, target?: unknown, user?: unknown, port?: unknown, identityFile?: unknown }} input
+ * @returns {object}
+ */
+export function updateServer(current, input) {
+  if (!isRecord(current)) fail('服务器不存在', 'not_found')
+  if (!isRecord(input)) fail('缺少服务器信息')
+  const target = normalizeServerTarget(input.target)
+  return {
+    ...current,
+    label: boundedLabel(input.label, '服务器名称', 80) || target,
+    target,
+    user: normalizeServerUser(input.user),
+    port: normalizePort(input.port),
+    identityFile: normalizeIdentityFile(input.identityFile),
+  }
+}
+
+/**
  * @param {unknown} value
  * @returns {object|null}
  */
@@ -354,6 +381,7 @@ export function normalizeSettings(patch, base = defaultSettings()) {
   const next = {
     ...base,
     globalCountries: Array.isArray(base.globalCountries) ? [...base.globalCountries] : [...DEFAULT_SETTINGS.globalCountries],
+    cnCity: typeof base.cnCity === 'string' ? base.cnCity : '',
   }
 
   if (patch.monitorEnabled !== undefined) {
@@ -375,6 +403,12 @@ export function normalizeSettings(patch, base = defaultSettings()) {
       fail('国内探测节点数必须是 1–3 的整数')
     }
     next.cnProbes = value
+  }
+
+  if (patch.cnCity !== undefined) {
+    const city = text(patch.cnCity)
+    if (city !== '' && !CN_CITY_CHOICES.includes(city)) fail(`不支持的国内节点城市：${city}`)
+    next.cnCity = city
   }
 
   if (patch.globalCountries !== undefined) {

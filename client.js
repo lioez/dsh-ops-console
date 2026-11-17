@@ -19,7 +19,7 @@ window.__ModuleLoader__.load({
     var module = { exports: {} };
     var exports = module.exports;
     const React = require('react');
-    const { useCallback, useEffect, useMemo, useRef, useState, useReducer } = React;
+    const { Fragment, useCallback, useEffect, useMemo, useRef, useState, useReducer } = React;
     const h = React.createElement;
 
     // =========================================================================
@@ -41,6 +41,20 @@ window.__ModuleLoader__.load({
     const TAB_IDS = ['overview', 'sites', 'servers', 'platforms', 'settings'];
     const INTERVAL_OPTIONS = [5, 10, 15, 30, 60, 120];
     const CN_PROBE_OPTIONS = [1, 2, 3];
+    const CN_CITY_OPTIONS = [
+      { value: 'Beijing', zh: '北京', en: 'Beijing' },
+      { value: 'Shanghai', zh: '上海', en: 'Shanghai' },
+      { value: 'Guangzhou', zh: '广州', en: 'Guangzhou' },
+      { value: 'Shenzhen', zh: '深圳', en: 'Shenzhen' },
+      { value: 'Chengdu', zh: '成都', en: 'Chengdu' },
+      { value: 'Hangzhou', zh: '杭州', en: 'Hangzhou' },
+      { value: 'Wuhan', zh: '武汉', en: 'Wuhan' },
+      { value: 'Nanjing', zh: '南京', en: 'Nanjing' },
+      { value: 'Chongqing', zh: '重庆', en: 'Chongqing' },
+      { value: 'Tianjin', zh: '天津', en: 'Tianjin' },
+      { value: 'Suzhou', zh: '苏州', en: 'Suzhou' },
+      { value: "Xi'an", zh: '西安', en: "Xi'an" },
+    ];
     const COUNTRY_OPTIONS = ['US', 'DE', 'JP', 'SG', 'GB', 'AU'];
     const HISTORY_POINTS_DEFAULT = 60;
 
@@ -77,7 +91,9 @@ window.__ModuleLoader__.load({
         common: {
           checkNow: '立即检测',
           checking: '检测中…',
+          cancel: '取消',
           close: '关闭',
+          edit: '编辑',
           collapse: '收起',
           confirmDelete: '确认删除',
           copied: '已复制',
@@ -281,6 +297,12 @@ window.__ModuleLoader__.load({
           addBusy: '添加中…',
           addSubmit: '添加服务器',
           addTitle: '添加服务器',
+          editTitle: '编辑服务器',
+          saveChanges: '保存修改',
+          saveBusy: '保存中…',
+          passwordLabel: '密码（可选，仅本次）',
+          passwordPlaceholder: '仅用于本次检测，不保存',
+          passwordHint: '密码只用于本次手动检测，不写入配置；后台定时检测仍使用密钥或 ssh-agent。',
           checkAll: '全部检测',
           checkingAll: '检测全部中…',
           coresHint: '{n} 核',
@@ -296,7 +318,7 @@ window.__ModuleLoader__.load({
           failedUnits: '失败服务',
           failedUnitsHint: '有失败的服务，请检查 systemd',
           failedUnitsValue: '{n} 项',
-          formHint: '私钥留空时由 ssh 自己读取 ~/.ssh/config、默认密钥和 ssh-agent；用户留空时使用本机登录用户名（不是默认 root）。macOS 可点「选择文件…」选择。',
+          formHint: '私钥留空时由 ssh 自己读取 ~/.ssh/config、默认密钥和 ssh-agent；用户留空时使用本机登录用户名（不是默认 root）。macOS 可点「选择文件…」选择。密码只用于本次手动检测，不保存。',
           pickKey: '选择文件…',
           pickKeyBusy: '选择中…',
           pickKeyHint: 'macOS 会打开系统文件选择器；其他系统请手动填写路径。',
@@ -410,6 +432,9 @@ window.__ModuleLoader__.load({
           clearHistoryHint: '删除网站与服务器的时间序列历史，保留监控项与设置。',
           cnProbes: 'CN 探测数量',
           cnProbesHint: '每次检测从 Globalping 选择的中国大陆节点数量。',
+          cnCity: 'CN 节点城市',
+          cnCityAuto: '自动（全国随机）',
+          cnCityHint: '只从选定城市选择节点；自动模式会在全国随机分配，节点断连时更容易遇到不同出口。',
           cooldown: '冷却中（{time}）',
           countryRequired: '请至少选择一个海外国家。',
           dataDirEmpty: 'Host 尚未提供数据目录。',
@@ -470,6 +495,7 @@ window.__ModuleLoader__.load({
           serverAdded: '服务器已添加。',
           serverChecked: '服务器检测已开始。',
           serverRemoved: '服务器已删除。',
+          serverUpdated: '服务器已更新。',
           settingsSaved: '设置已保存。',
           siteAdded: '网站已添加。',
           siteChecked: '网站检测已开始。',
@@ -500,7 +526,9 @@ window.__ModuleLoader__.load({
         common: {
           checkNow: 'Check now',
           checking: 'Checking…',
+          cancel: 'Cancel',
           close: 'Close',
+          edit: 'Edit',
           collapse: 'Collapse',
           confirmDelete: 'Confirm delete',
           copied: 'Copied',
@@ -704,6 +732,12 @@ window.__ModuleLoader__.load({
           addBusy: 'Adding…',
           addSubmit: 'Add server',
           addTitle: 'Add a server',
+          editTitle: 'Edit server',
+          saveChanges: 'Save changes',
+          saveBusy: 'Saving…',
+          passwordLabel: 'Password (optional, this check only)',
+          passwordPlaceholder: 'Used once; never saved',
+          passwordHint: 'The password is used for this manual check only and is not written to the config. Scheduled checks still use the key or ssh-agent.',
           checkAll: 'Check all',
           checkingAll: 'Checking all…',
           coresHint: '{n} cores',
@@ -719,7 +753,7 @@ window.__ModuleLoader__.load({
           failedUnits: 'Failed units',
           failedUnitsHint: 'Some systemd units failed',
           failedUnitsValue: '{n}',
-          formHint: 'With an empty identity path, ssh resolves ~/.ssh/config, default keys and ssh-agent itself. With an empty user, ssh uses the local account name (not necessarily root). On macOS, use Choose file… to pick a key.',
+          formHint: 'With an empty identity path, ssh resolves ~/.ssh/config, default keys and ssh-agent itself. With an empty user, ssh uses the local account name (not necessarily root). On macOS, use Choose file… to pick a key. A password is used for this manual check only and is not saved.',
           pickKey: 'Choose file…',
           pickKeyBusy: 'Choosing…',
           pickKeyHint: 'macOS opens the system file chooser; other platforms need a typed path.',
@@ -833,6 +867,9 @@ window.__ModuleLoader__.load({
           clearHistoryHint: 'Deletes time-series history for websites and servers; watchlist items and settings are kept.',
           cnProbes: 'CN probes',
           cnProbesHint: 'Number of mainland-China Globalping nodes used per check.',
+          cnCity: 'CN node city',
+          cnCityAuto: 'Automatic (any city)',
+          cnCityHint: 'Restrict probes to one city. Automatic mode picks any city in China, so a flaky node is more likely to appear.',
           cooldown: 'Cooling down ({time})',
           countryRequired: 'Select at least one global country.',
           dataDirEmpty: 'The Host has not provided a data directory yet.',
@@ -893,6 +930,7 @@ window.__ModuleLoader__.load({
           serverAdded: 'Server added.',
           serverChecked: 'Server check started.',
           serverRemoved: 'Server removed.',
+          serverUpdated: 'Server updated.',
           settingsSaved: 'Settings saved.',
           siteAdded: 'Website added.',
           siteChecked: 'Website check started.',
@@ -2602,17 +2640,66 @@ window.__ModuleLoader__.load({
         h('p', { className: 'ops-muted ops-small' }, t('servers.keyHelpNote')));
     }
 
-    function AddServerForm(props) {
+    const SERVER_DRAFT_KEY = 'dsh-ops-console.server-draft.v1';
+
+    function readServerDraft() {
+      if (typeof window === 'undefined' || !window.localStorage) return {};
+      try {
+        const raw = window.localStorage.getItem(SERVER_DRAFT_KEY);
+        if (!raw) return {};
+        const value = JSON.parse(raw);
+        if (!value || typeof value !== 'object') return {};
+        return {
+          label: typeof value.label === 'string' ? value.label.slice(0, 80) : '',
+          target: typeof value.target === 'string' ? value.target.slice(0, 255) : '',
+          user: typeof value.user === 'string' ? value.user.slice(0, 64) : '',
+          port: typeof value.port === 'string' ? value.port.slice(0, 8) : '',
+          identityFile: typeof value.identityFile === 'string' ? value.identityFile.slice(0, 512) : '',
+        };
+      } catch (error) {
+        return {};
+      }
+    }
+
+    function saveServerDraft(value) {
+      if (typeof window === 'undefined' || !window.localStorage) return;
+      try {
+        window.localStorage.setItem(SERVER_DRAFT_KEY, JSON.stringify(value));
+      } catch (error) {
+        /* storage can be unavailable or full; the form still works */
+      }
+    }
+
+    function clearServerDraft() {
+      if (typeof window === 'undefined' || !window.localStorage) return;
+      try {
+        window.localStorage.removeItem(SERVER_DRAFT_KEY);
+      } catch (error) {
+        /* ignore */
+      }
+    }
+
+    function ServerFormFields(props) {
       const { t } = useI18n();
-      const [label, setLabel] = useState('');
-      const [target, setTarget] = useState('');
-      const [user, setUser] = useState('');
-      const [port, setPort] = useState('');
-      const [identityFile, setIdentityFile] = useState('');
+      const editing = Boolean(props.server && props.server.id);
+      const initial = editing ? props.server : readServerDraft();
+      const [label, setLabel] = useState(String(initial.label || ''));
+      const [target, setTarget] = useState(String(initial.target || ''));
+      const [user, setUser] = useState(String(initial.user || ''));
+      const [port, setPort] = useState(initial.port ? String(initial.port) : '');
+      const [identityFile, setIdentityFile] = useState(String(initial.identityFile || ''));
+      const [password, setPassword] = useState('');
       const [formError, setFormError] = useState('');
       const [pickError, setPickError] = useState('');
-      const busy = props.ops.isBusy('server.add');
+      const busyKey = editing ? 'server.update:' + props.server.id : 'server.add';
+      const busy = props.ops.isBusy(busyKey);
       const busyPick = props.ops.isBusy('server.pickKey');
+
+      useEffect(() => {
+        if (editing) return;
+        saveServerDraft({ label, target, user, port, identityFile });
+      }, [editing, label, target, user, port, identityFile]);
+
       const pickKey = async () => {
         setPickError('');
         const result = await props.ops.runAction('server.pickKey', { type: 'server.pickKey' }, {
@@ -2621,6 +2708,7 @@ window.__ModuleLoader__.load({
         });
         if (result && typeof result.path === 'string' && result.path !== '') setIdentityFile(result.path);
       };
+
       const onSubmit = async (event) => {
         event.preventDefault();
         if (busy) return;
@@ -2639,23 +2727,35 @@ window.__ModuleLoader__.load({
           }
         }
         setFormError('');
-        const result = await props.ops.runAction('server.add', {
-          type: 'server.add',
+        const payload = {
+          type: editing ? 'server.update' : 'server.add',
           label: label.trim(),
           target: trimmedTarget,
           user: user.trim(),
           port: portNumber,
           identityFile: identityFile.trim(),
-        }, { note: t('notes.serverAdded') });
-        if (result) {
-          setLabel('');
-          setTarget('');
-          setUser('');
-          setPort('');
-          setIdentityFile('');
+        };
+        if (editing) payload.id = props.server.id;
+        if (password !== '') payload.password = password;
+        const result = await props.ops.runAction(busyKey, payload, {
+          note: editing ? t('notes.serverUpdated') : t('notes.serverAdded'),
+          timeoutMs: 60000,
+        });
+        if (!result) return;
+        setPassword('');
+        if (editing) {
+          if (props.onDone) props.onDone(result);
+          return;
         }
+        clearServerDraft();
+        setLabel('');
+        setTarget('');
+        setUser('');
+        setPort('');
+        setIdentityFile('');
       };
-      return h(Card, { title: t('servers.addTitle') },
+
+      return h(Fragment, null,
         h('form', { className: 'ops-form', onSubmit, noValidate: true },
           h(Field, { label: t('servers.labelLabel'), className: 'ops-field-grow' },
             h('input', {
@@ -2718,15 +2818,41 @@ window.__ModuleLoader__.load({
                 onClick: pickKey,
                 disabled: busy || busyPick,
               }, busyPick ? t('servers.pickKeyBusy') : t('servers.pickKey')))),
+          h(Field, { label: t('servers.passwordLabel'), className: 'ops-field-grow' },
+            h('input', {
+              className: 'ops-input',
+              type: 'password',
+              value: password,
+              placeholder: t('servers.passwordPlaceholder'),
+              onChange: (event) => setPassword(event.target.value),
+              disabled: busy,
+              autoComplete: 'new-password',
+              spellCheck: false,
+              title: t('servers.passwordHint'),
+            })),
           h('button', {
             type: 'submit',
             className: 'ops-btn ops-btn-primary',
             disabled: busy,
-          }, busy ? t('servers.addBusy') : t('servers.addSubmit'))),
+          }, busy ? (editing ? t('servers.saveBusy') : t('servers.addBusy')) : editing ? t('servers.saveChanges') : t('servers.addSubmit')),
+          editing && props.onCancel
+            ? h('button', {
+              type: 'button',
+              className: 'ops-btn',
+              onClick: props.onCancel,
+              disabled: busy,
+            }, t('common.cancel'))
+            : null),
         h('p', { className: 'ops-form-hint' }, t('servers.formHint')),
         h(InlineError, null, formError),
         h(InlineError, null, pickError),
         h(ServerKeyHelp, { target }));
+    }
+
+    function AddServerForm(props) {
+      const { t } = useI18n();
+      return h(Card, { title: t('servers.addTitle') },
+        h(ServerFormFields, { ops: props.ops }));
     }
 
     function ServerMetrics(props) {
@@ -2815,6 +2941,10 @@ window.__ModuleLoader__.load({
               warnings.map((warning, index) => h('li', { key: index },
                 typeof warning === 'string' ? warning : errorMessageText(warning)))))
           : null,
+        props.server.identityFile
+          ? h('p', { className: 'ops-muted ops-small' },
+            t('servers.identityNote', { path: String(props.server.identityFile) }))
+          : null,
         h('section', { className: 'ops-detail-block' },
           h('div', { className: 'ops-subhead' },
             h('h4', { className: 'ops-subtitle' }, t('servers.rawTitle')),
@@ -2825,11 +2955,28 @@ window.__ModuleLoader__.load({
             : h('p', { className: 'ops-muted' }, t('servers.rawEmpty'))));
     }
 
+    function ServerSummary(props) {
+      const { t } = useI18n();
+      const last = asObject(props.server.last);
+      if (!last.checkedAt || last.status === 'offline') return null;
+      const memory = asObject(last.memory);
+      const disk = asObject(last.disk);
+      const items = [
+        t('servers.duration') + ' ' + formatMs(t, last.durationMs),
+        isFiniteNumber(last.uptimeSeconds) ? t('servers.uptime') + ' ' + formatUptime(t, last.uptimeSeconds) : null,
+        isFiniteNumber(memory.usedPct) ? t('servers.memory') + ' ' + numericText(memory.usedPct) + '%' : null,
+        isFiniteNumber(disk.usedPct) ? t('servers.disk') + ' ' + numericText(disk.usedPct) + '%' : null,
+      ].filter(Boolean);
+      return h('div', { className: 'ops-server-summary' },
+        items.map((item, index) => h('span', { key: index, className: 'ops-server-summary-item' }, item)));
+    }
+
     function ServerCard(props) {
       const { t } = useI18n();
       const server = props.server;
       const id = String(server.id);
       const [expanded, setExpanded] = useState(false);
+      const [editing, setEditing] = useState(false);
       const busyCheck = props.ops.isBusy('server.check:' + id);
       const busyRemove = props.ops.isBusy('server.remove:' + id);
       const last = asObject(server.last);
@@ -2843,6 +2990,15 @@ window.__ModuleLoader__.load({
       const remove = () => props.ops.runAction('server.remove:' + id, { type: 'server.remove', id }, {
         note: t('notes.serverRemoved'),
       });
+      if (editing) {
+        return h(Card, { title: t('servers.editTitle') },
+          h(ServerFormFields, {
+            ops: props.ops,
+            server,
+            onDone: () => setEditing(false),
+            onCancel: () => setEditing(false),
+          }));
+      }
       return h('article', { className: 'ops-card ops-item-card', 'data-status': status || 'unknown' },
         h('div', { className: 'ops-item-head' },
           h('div', { className: 'ops-item-title-wrap' },
@@ -2873,6 +3029,12 @@ window.__ModuleLoader__.load({
               'aria-expanded': expanded ? 'true' : 'false',
               onClick: () => setExpanded((value) => !value),
             }, expanded ? t('common.collapse') : t('common.details')),
+            h('button', {
+              type: 'button',
+              className: 'ops-btn',
+              onClick: () => setEditing(true),
+              disabled: busyCheck || busyRemove,
+            }, t('common.edit')),
             h(ConfirmButton, {
               label: t('common.delete'),
               confirmLabel: t('common.confirmDelete'),
@@ -2882,22 +3044,16 @@ window.__ModuleLoader__.load({
               title: t('servers.deleteConfirm'),
             }))),
         last.checkedAt
-          ? (last.status === 'offline' && last.error
-            ? h('div', { className: 'ops-metrics' },
-              h(Metric, { label: t('servers.duration'), value: formatMs(t, last.durationMs) }),
-              h(Metric, { label: t('servers.lastChecked'), value: formatRelative(t, last.checkedAt, props.now) }))
-            : h(ServerMetrics, { server, now: props.now, locale: props.locale }))
+          ? h(ServerSummary, { server, now: props.now, locale: props.locale })
           : h('p', { className: 'ops-muted' }, t('servers.sshHint')),
         last.error && !expanded
-          ? h('div', { className: 'ops-inline-error ops-small' },
-            h('p', null, errorMessageText(last.error)),
-            h(SshErrorCommand, { error: last.error }))
+          ? h('p', { className: 'ops-inline-error ops-small' }, errorMessageText(last.error))
           : null,
-        server.identityFile
-          ? h('p', { className: 'ops-muted ops-small' },
-            t('servers.identityNote', { path: String(server.identityFile) }))
-          : null,
-        expanded ? h(ServerDetails, { server, now: props.now, locale: props.locale }) : null);
+        expanded
+          ? h(Fragment, null,
+            last.status !== 'offline' ? h(ServerMetrics, { server, now: props.now, locale: props.locale }) : null,
+            h(ServerDetails, { server, now: props.now, locale: props.locale }))
+          : null);
     }
 
     function ServersTab(props) {
@@ -3476,10 +3632,12 @@ window.__ModuleLoader__.load({
       const countries = asArray(source.globalCountries)
         .map((country) => String(country))
         .filter((country) => COUNTRY_OPTIONS.indexOf(country) !== -1);
+      const city = CN_CITY_OPTIONS.some((option) => option.value === source.cnCity) ? source.cnCity : '';
       return {
         monitorEnabled: source.monitorEnabled !== false,
         intervalMinutes: interval,
         cnProbes: probes,
+        cnCity: city,
         globalCountries: countries.length > 0 ? countries : ['US', 'DE'],
         historyPoints: isFiniteNumber(source.historyPoints) && source.historyPoints > 0
           ? source.historyPoints
@@ -3488,7 +3646,7 @@ window.__ModuleLoader__.load({
     }
 
     function SettingsMonitorCard(props) {
-      const { t } = useI18n();
+      const { t, locale } = useI18n();
       const settings = props.settings;
       const [draft, setDraft] = useState(() => buildSettingsDraft(settings));
       const dirtyRef = useRef(false);
@@ -3531,6 +3689,7 @@ window.__ModuleLoader__.load({
           monitorEnabled: Boolean(draft.monitorEnabled),
           intervalMinutes: Number(draft.intervalMinutes),
           cnProbes: Number(draft.cnProbes),
+          cnCity: draft.cnCity || '',
           globalCountries: draft.globalCountries.slice(),
           historyPoints: Number(draft.historyPoints),
         };
@@ -3584,7 +3743,17 @@ window.__ModuleLoader__.load({
                 disabled: busy,
                 onClick: () => update({ cnProbes: count }),
               }, t('settings.probeUnit', { n: count })))),
-            h('span', { className: 'ops-field-hint' }, t('settings.cnProbesHint')))),
+            h('span', { className: 'ops-field-hint' }, t('settings.cnProbesHint'))),
+          h(Field, { label: t('settings.cnCity'), className: 'ops-field' },
+            h('select', {
+              className: 'ops-select',
+              value: draft.cnCity || '',
+              onChange: (event) => update({ cnCity: event.target.value }),
+              disabled: busy,
+            },
+            h('option', { value: '' }, t('settings.cnCityAuto')),
+            CN_CITY_OPTIONS.map((city) => h('option', { key: city.value, value: city.value }, locale === 'en' ? city.en : city.zh))),
+            h('span', { className: 'ops-field-hint' }, t('settings.cnCityHint')))),
         h('div', { className: 'ops-field' },
           h('span', { className: 'ops-field-label' }, t('settings.globalCountries')),
           h('div', { className: 'ops-checkbox-grid' },
@@ -4191,6 +4360,8 @@ window.__ModuleLoader__.load({
 .ops-item-title { font-size: 13.5px; font-weight: 600; overflow-wrap: anywhere; }
 .ops-item-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; font-size: 11.5px; }
 .ops-item-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ops-server-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 12px; min-width: 0; }
+.ops-server-summary-item { font-size: 11.5px; color: var(--ops-text-secondary); white-space: normal; overflow-wrap: anywhere; }
 .ops-metrics {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(108px, 1fr));
   gap: 8px; margin-top: 2px; align-items: stretch;
@@ -4201,8 +4372,8 @@ window.__ModuleLoader__.load({
   background: var(--ops-bg);
 }
 .ops-metric-label { font-size: 11px; color: var(--ops-text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ops-metric-value { font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ops-metric-hint { font-size: 10.5px; color: var(--ops-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ops-metric-value { font-size: 13px; font-weight: 500; overflow-wrap: anywhere; }
+.ops-metric-hint { font-size: 10.5px; color: var(--ops-text-secondary); overflow-wrap: anywhere; }
 .ops-meter { height: 6px; border-radius: 999px; overflow: hidden; background: color-mix(in srgb, var(--ops-text-secondary) 20%, transparent); margin-top: 3px; }
 .ops-meter-fill { display: block; height: 100%; border-radius: inherit; background: var(--ops-brand); transition: width 180ms ease; }
 .ops-meter-success { background: var(--ops-success); }

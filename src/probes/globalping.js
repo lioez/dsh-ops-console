@@ -97,7 +97,7 @@ function apiError(body) {
  * Build the measurement request body.
  *
  * @param {{ url: string }} site
- * @param {{ cnProbes?: number, globalCountries?: string[] }} settings
+ * @param {{ cnProbes?: number, cnCity?: string, globalCountries?: string[] }} settings
  * @returns {object}
  */
 export function buildMeasurement(site, settings = {}) {
@@ -106,7 +106,10 @@ export function buildMeasurement(site, settings = {}) {
   const countries = Array.isArray(settings.globalCountries) && settings.globalCountries.length > 0
     ? settings.globalCountries
     : ['US', 'DE']
-  const locations = [{ country: 'CN', limit: cnProbes }]
+  const cnCity = typeof settings.cnCity === 'string' ? settings.cnCity.trim() : ''
+  const locations = [cnCity !== ''
+    ? { country: 'CN', city: cnCity, limit: cnProbes }
+    : { country: 'CN', limit: cnProbes }]
   for (const country of countries) {
     if (country === 'CN') continue
     locations.push({ country, limit: 1 })

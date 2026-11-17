@@ -17,6 +17,7 @@ import {
   createProject,
   createRepo,
   createServer,
+  updateServer,
   createSite,
   normalizePort,
   normalizeProject,
@@ -83,6 +84,21 @@ function idOf(value) {
   const id = requiredString(value, 'id')
   if (!/^[A-Za-z0-9_-]{1,100}$/u.test(id)) throw new ActionError(400, 'invalid_input', 'id 不合法')
   return id
+}
+
+/**
+ * A password is accepted for one manual check only. It is never written to the
+ * config or cache; the caller must send it again if it is needed again.
+ * @param {unknown} value
+ * @returns {string}
+ */
+function transientPassword(value) {
+  if (value === undefined || value === null) return ''
+  if (typeof value !== 'string') throw new ActionError(400, 'invalid_password', '密码必须是字符串')
+  if (value === '') return ''
+  if (value.length > 1024) throw new ActionError(400, 'invalid_password', '密码过长')
+  if (/[\0\r\n]/u.test(value)) throw new ActionError(400, 'invalid_password', '密码包含不允许的控制字符')
+  return value
 }
 
 /**
@@ -156,11 +172,47 @@ async function handleAction(store, monitor, logger, body) {
         port,
         identityFile: normalizeIdentityFile(body.identityFile),
       })
+      const password = transientPassword(body.password)
       await store.updateConfig((draft) => {
         draft.servers.push(server)
       })
-      void monitor.checkServer(server).catch((error) => logger?.warn?.('auto server check failed: %s', error))
+      void monitor.checkServer(server, { password }).catch((error) => logger?.warn?.('auto server check failed: %s', error))
       return { ok: true, id: server.id }
+    }
+
+    case 'server.update': {
+      const id = idOf(body.id)
+      const existing = config.servers.find((item) => item.id === id)
+      if (!existing) throw new ActionError(404, 'not_found', '服务器不存在')
+      const target = normalizeServerTarget(body.target)
+      const user = normalizeServerUser(body.user)
+      const port = normalizePort(body.port)
+      if (config.servers.some((item) => item.id !== id && item.target === target && item.user === user && (item.port ?? null) === port)) {
+        throw new ActionError(409, 'duplicate_server', '这台服务器已经在列表中')
+      }
+      const updated = updateServer(existing, {
+        label: body.label,
+        target,
+        user,
+        port,
+        identityFile: normalizeIdentityFile(body.identityFile),
+      })
+      const password = transientPassword(body.password)
+      const transportChanged = updated.target !== existing.target
+        || updated.user !== existing.user
+        || (updated.port ?? null) !== (existing.port ?? null)
+        || updated.identityFile !== existing.identityFile
+      await store.updateConfig((draft) => {
+        const index = draft.servers.findIndex((item) => item.id === id)
+        if (index !== -1) draft.servers[index] = updated
+      })
+      if (transportChanged) {
+        await store.updateCacheBestEffort((draft) => {
+          delete draft.servers[id]
+        })
+      }
+      void monitor.checkServer(updated, { password }).catch((error) => logger?.warn?.('server update check failed: %s', error))
+      return { ok: true, id }
     }
 
     case 'server.remove': {
@@ -192,7 +244,8 @@ async function handleAction(store, monitor, logger, body) {
         const id = idOf(body.id)
         const server = config.servers.find((item) => item.id === id)
         if (!server) throw new ActionError(404, 'not_found', '服务器不存在')
-        void monitor.checkServer(server).catch((error) => logger?.warn?.('server check failed: %s', error))
+        const password = transientPassword(body.password)
+        void monitor.checkServer(server, { password }).catch((error) => logger?.warn?.('server check failed: %s', error))
       } else {
         void monitor.checkAllServers().catch((error) => logger?.warn?.('server checks failed: %s', error))
       }

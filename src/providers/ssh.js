@@ -10,6 +10,8 @@
  */
 
 import fs from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
 
 import { commandFailure, runCli } from '../cli.js'
 import { expandHome } from '../paths.js'
@@ -43,16 +45,27 @@ export const REMOTE_STATUS_COMMAND = [
  * @param {object} server config server.
  * @returns {string[]}
  */
-export function buildSshArgs(server) {
-  const args = [
-    '-o', 'BatchMode=yes',
-    '-o', 'ConnectTimeout=8',
-    '-o', 'ServerAliveInterval=5',
-    '-o', 'ServerAliveCountMax=2',
-    '-o', 'LogLevel=ERROR',
-  ]
+export function buildSshArgs(server, options = {}) {
+  const passwordMode = options.password === true
+  const args = passwordMode
+    ? [
+        '-o', 'ConnectTimeout=8',
+        '-o', 'ServerAliveInterval=5',
+        '-o', 'ServerAliveCountMax=2',
+        '-o', 'LogLevel=ERROR',
+        '-o', 'NumberOfPasswordPrompts=1',
+        '-o', 'PreferredAuthentications=password,keyboard-interactive',
+        '-o', 'PubkeyAuthentication=no',
+      ]
+    : [
+        '-o', 'BatchMode=yes',
+        '-o', 'ConnectTimeout=8',
+        '-o', 'ServerAliveInterval=5',
+        '-o', 'ServerAliveCountMax=2',
+        '-o', 'LogLevel=ERROR',
+      ]
   if (Number.isInteger(server.port) && server.port > 0) args.push('-p', String(server.port))
-  if (typeof server.identityFile === 'string' && server.identityFile.trim() !== '') {
+  if (!passwordMode && typeof server.identityFile === 'string' && server.identityFile.trim() !== '') {
     args.push('-i', expandHome(server.identityFile))
   }
   const target = String(server.target ?? '')
@@ -264,16 +277,50 @@ export function classifySshError(result, server = null) {
 }
 
 /**
+ * A short-lived askpass helper for a one-shot password login. The password is
+ * passed via the child environment and is never written to disk; only this
+ * script path is temporary. The helper is executable for the current user only.
+ *
+ * @param {string} password
+ * @param {Function} run
+ * @param {object} server
+ * @param {object} options
+ * @returns {Promise<object>}
+ */
+async function runWithPassword(password, run, server, options) {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ops-console-askpass-'))
+  const helper = path.join(dir, 'askpass.sh')
+  try {
+    await fs.writeFile(helper, '#!/bin/sh\nprintf \'%s\\n\' "$OPS_CONSOLE_SSH_PASSWORD"\n', { mode: 0o700 })
+    await fs.chmod(helper, 0o700)
+    return await run('ssh', buildSshArgs(server, { password: true }), {
+      timeoutMs: Number.isFinite(options.timeoutMs) ? options.timeoutMs : SSH_TIMEOUT_MS,
+      signal: options.signal,
+      env: {
+        SSH_ASKPASS: helper,
+        SSH_ASKPASS_REQUIRE: 'force',
+        DISPLAY: process.env.DISPLAY || ':0',
+        OPS_CONSOLE_SSH_PASSWORD: password,
+      },
+    })
+  } finally {
+    await fs.rm(dir, { recursive: true, force: true }).catch(() => {})
+  }
+}
+
+/**
  * @param {object} server config server.
  * @param {object} [options]
  * @param {number} [options.timeoutMs]
  * @param {AbortSignal} [options.signal]
+ * @param {string} [options.password] one-shot password; never persisted.
  * @param {Function} [options.run] injected runCli for tests.
  * @returns {Promise<object>}
  */
 export async function probeServer(server, options = {}) {
   const started = Date.now()
-  const keyIssue = await keyPermissionIssue(server)
+  const password = typeof options.password === 'string' ? options.password : ''
+  const keyIssue = password === '' ? await keyPermissionIssue(server) : null
   if (keyIssue) {
     return {
       checkedAt: Date.now(),
@@ -297,11 +344,12 @@ export async function probeServer(server, options = {}) {
   const run = options.run ?? runCli
   let result
   try {
-    const args = buildSshArgs(server)
-    result = await run('ssh', args, {
-      timeoutMs: Number.isFinite(options.timeoutMs) ? options.timeoutMs : SSH_TIMEOUT_MS,
-      signal: options.signal,
-    })
+    result = password === ''
+      ? await run('ssh', buildSshArgs(server), {
+          timeoutMs: Number.isFinite(options.timeoutMs) ? options.timeoutMs : SSH_TIMEOUT_MS,
+          signal: options.signal,
+        })
+      : await runWithPassword(password, run, server, options)
   } catch (error) {
     result = {
       ok: false,

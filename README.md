@@ -20,7 +20,7 @@
 | 网站 | 添加/删除站点，手动或定时检测；本机 + 国内 + 海外三组结果；TLS 到期天数；历史与可用率 |
 | 服务器 | 添加 SSH 目标，读取 hostname / OS / uptime / load / 内存 / 磁盘 / failed units / Docker 容器数 |
 | 平台 | GitHub 账号与监听仓库的最近 Actions、PR 数；Cloudflare 账号、Pages 项目与最近部署 |
-| 设置 | 监控间隔、国内探测节点数、海外国家、Globalping 额度、数据目录、清空历史 |
+| 设置 | 监控间隔、国内探测节点数/城市、海外国家、Globalping 额度、数据目录、清空历史 |
 
 ## 安装
 
@@ -51,7 +51,9 @@ plugin_manager install_bundle → target: /absolute/path/to/dsh-ops-console
 2. 「全部检测」立即跑所有站点；定时任务默认每 15 分钟一次，只在 DSH 进程运行时有效。
 3. 站点展开可见本机 DNS/TCP/TLS/首字节/总耗时、重定向链、TLS 信息、国内外逐节点结果。
 4. 「在 itdog 打开」会用当前域名打开 itdog 现有的全国测速页（`auto_submit=1`），用于手动复核；插件不抓取 itdog。
-5. 「服务器」添加 ssh 别名/域名/IP 后会自动跑一次只读状态命令；「平台」添加 GitHub 仓库或从已发现的 Pages 项目中选择。
+5. 「服务器」添加 ssh 别名/域名/IP 后会自动跑一次只读状态命令；服务器卡片默认只显示地址、状态和一行摘要，点「详情」展开完整指标。
+6. 服务器支持编辑：可改标签、目标、用户、端口、私钥；也可以临时输入密码做一次密码登录检测（密码不保存）。
+7. 「平台」添加 GitHub 仓库或从已发现的 Pages 项目中选择。
 
 ## 状态含义
 
@@ -68,6 +70,9 @@ plugin_manager install_bundle → target: /absolute/path/to/dsh-ops-console
 - **macOS**：添加服务器时可点「选择文件…」打开系统文件选择器；其他平台请手动填写路径。
 - **权限**：私钥必须仅本人可读（`chmod 600`）。权限过宽时 `ssh` 会忽略密钥，插件会直接给出可复制的 `chmod` 命令。
 - **用户**：留空时 `ssh` 使用本机用户名，不是默认 root；请按远端实际用户填写（例如 `root`、`ubuntu`）。
+- **密码登录**：编辑或添加服务器时可在「密码（可选，仅本次）」里输入；只用于这一次手动检测，不写入配置。后台定时检测仍然只使用密钥/agent。
+- **编辑**：服务器卡片上的「编辑」可以改标签、目标、用户、端口和私钥，也可以重新选择密钥；改动连接信息后会清掉旧缓存并重新检测。
+- **草稿**：添加服务器表单的内容会保存在本机浏览器中，切换到其他页再回来不会丢；密码不会进入草稿。
 - 查看本机配置：`ls -la ~/.ssh`、`ssh-add -l`、`ssh -G <目标别名>`。
 - 把密钥加入 agent：`ssh-add ~/.ssh/id_ed25519`（macOS 可用 `ssh-add --apple-use-keychain`）。
 - 主机密钥未验证时，服务器详情会给出可复制的 `ssh ...` 命令；在终端运行一次、确认指纹后重试。插件不会自动关闭 host-key 校验。
@@ -85,6 +90,7 @@ plugin_manager install_bundle → target: /absolute/path/to/dsh-ops-console
 
 - 本机探测：Node `http`/`https`，记录 DNS、TCP、TLS、首字节（含连接）和总耗时。
 - 多地域探测：[Globalping](https://globalping.io/docs/api.globalping.io) 公共 API。验证时中国有 34 个节点、全球 5506 个；匿名额度 250 次/小时，**按本机公网出口 IP 计量，不绑定账号**，同一 IP 的其他使用会共用。
+- **国内节点选择**：Globalping 不公开具体 probe ID，无法指定某一台节点；设置里可以选一个 CN 城市（自动/北京/上海/广州/…），让探测固定在该城市，减少全国随机分配时遇到不稳定节点。
 - 手动复核：[itdog](https://www.itdog.cn/http/)。itdog 没有公开 API，页面依赖前端 JS/WebSocket 与 Cookie 反爬；插件不抓取、不 iframe，只提供预填深链。
 
 ## 架构
@@ -132,6 +138,8 @@ publish_plugin check
 ## 已知限制
 
 - 只在 DSH 运行时监控，不是 7×24 外部探针。
+- 密码登录只支持手动检测；后台定时检测不会保存密码。
+- Globalping 只能按城市/国家/ASN 筛节点，不能指定具体 probe ID。
 - 不执行远端写操作。
 - Cloudflare 只覆盖 Pages；Zones/DNS/Workers 未接入。
 - SSH 目标以 Linux 为主；macOS 能连通但部分 `/proc` 指标为空。

@@ -17,7 +17,7 @@ function fakeMonitor() {
     validateRepo: async () => ({ ok: true, error: null }),
     checkSite: async (site) => calls.push(`site:${site.id}`),
     checkAllSites: async () => calls.push('sites:all'),
-    checkServer: async (server) => calls.push(`server:${server.id}`),
+    checkServer: async (server, options = {}) => calls.push(`server:${server.id}:${options.password ? 'password' : 'key'}`),
     checkAllServers: async () => calls.push('servers:all'),
     refreshGithub: async () => calls.push('github:refresh'),
     refreshCloudflare: async () => calls.push('cloudflare:refresh'),
@@ -94,6 +94,35 @@ test('server add validates and starts a check', async () => {
   assert.equal(store.getConfig().servers.length, 1)
   await tick()
   assert.equal(calls.some((line) => line.startsWith('server:')), true)
+})
+
+test('server update edits user and key and only passes a one-time password to the check', async () => {
+  const added = await action({ type: 'server.add', label: 'old', target: 'vps01', user: 'root', port: 22 })
+  const id = added.body.id
+  const updated = await action({
+    type: 'server.update',
+    id,
+    label: 'new',
+    target: 'vps02',
+    user: 'deploy',
+    port: 2222,
+    identityFile: '~/.ssh/id_ed25519',
+    password: 'one-time-secret',
+  })
+  assert.equal(updated.status, 200)
+  const server = store.getConfig().servers[0]
+  assert.equal(server.label, 'new')
+  assert.equal(server.target, 'vps02')
+  assert.equal(server.user, 'deploy')
+  assert.equal(server.port, 2222)
+  assert.equal(server.identityFile, '~/.ssh/id_ed25519')
+  assert.equal(JSON.stringify(store.getConfig()).includes('one-time-secret'), false)
+  await tick()
+  assert.equal(calls.at(-1), `server:${id}:password`)
+
+  await action({ type: 'server.add', target: 'vps09', user: 'root', port: 22 })
+  const duplicate = await action({ type: 'server.update', id, target: 'vps09', user: 'root', port: 22 })
+  assert.equal(duplicate.status, 409)
 })
 
 test('settings save reschedules and rejects bad values', async () => {

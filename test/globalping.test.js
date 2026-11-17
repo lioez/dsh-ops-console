@@ -51,6 +51,11 @@ test('measurement payload carries target, path, port and region limits', () => {
     { country: 'US', limit: 1 },
     { country: 'DE', limit: 1 },
   ])
+  const shanghai = buildMeasurement(
+    { url: 'https://example.com/' },
+    { cnProbes: 1, cnCity: 'Shanghai', globalCountries: ['US'] },
+  )
+  assert.deepEqual(shanghai.locations[0], { country: 'CN', city: 'Shanghai', limit: 1 })
 })
 
 test('groupResults separates CN from overseas and computes medians', () => {
