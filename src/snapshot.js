@@ -36,6 +36,9 @@ export function classifySite(last) {
   if (local.error?.code === 'ABORT_ERR' || /取消|cancel|abort/iu.test(String(local.error?.message ?? ''))) {
     return { status: 'unknown', reasons: ['上一次检测被取消，等待重新检测'] }
   }
+  if (local.tls?.valid === false && /取消|cancel|abort/iu.test(String(local.tls?.error ?? ''))) {
+    return { status: 'unknown', reasons: ['上一次 TLS 探测被取消，等待重新检测'] }
+  }
   if (!local.reachable) {
     status = 'down'
     if (local.error?.message) reasons.push(local.error.message)

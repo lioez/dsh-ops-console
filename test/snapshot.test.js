@@ -31,6 +31,7 @@ test('site classification covers up, degraded and down', () => {
   assert.equal(classifySite(cnDown).status, 'degraded')
   assert.equal(classifySite(null).status, 'unknown')
   assert.equal(classifySite(last({ local: { ...last().local, reachable: false, error: { code: 'ABORT_ERR', message: '探测已取消' } } })).status, 'unknown')
+  assert.equal(classifySite(last({ local: { ...last().local, tls: { valid: false, error: '探测已取消' } } })).status, 'unknown')
 })
 
 test('uptime is computed over the stored window', () => {
