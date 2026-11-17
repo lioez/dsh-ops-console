@@ -26,7 +26,8 @@ The screenshot uses `example.com`; real configuration stays on your machine.
   failed systemd units and Docker container count.
 - Platforms: GitHub login and watched-repository Actions/PR summaries; Cloudflare
   account, Pages projects and recent deployments. Repository and project cards
-  stay collapsed until Details is opened.
+  stay collapsed until Details is opened. Missing CLIs or sign-ins get a
+  copyable install/login command and a re-check button.
 - Settings: monitor interval, CN probe count, overseas countries, Globalping
   quota, data directory and cache controls.
 

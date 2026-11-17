@@ -16,7 +16,7 @@ import { buildRoutes } from './src/routes.js'
 import { createStore } from './src/state.js'
 
 /** Package version mirrored in package.json. */
-const VERSION = '0.2.0'
+const VERSION = '0.3.0'
 
 export const name = 'dsh-ops-console'
 

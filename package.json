@@ -1,6 +1,6 @@
 {
   "name": "dsh-ops-console",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "A local operations console for DeepSeek Harness: GitHub, Cloudflare, SSH servers and multi-region website checks. · 本机运维台：GitHub、Cloudflare、SSH 服务器与国内外网站探测。",
   "keywords": [

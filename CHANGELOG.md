@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0 — 2026-11-17
+
+- Added actionable GitHub and Cloudflare onboarding: install command, login command with copy button, three-step guide, and a re-check button after signing in.
+- Kept the existing platform statuses and error hints; no token or password is stored.
+
 ## 0.2.0 — 2026-11-17
 
 - Added a visible status guide and per-site reasons so "degraded" is explained in place.

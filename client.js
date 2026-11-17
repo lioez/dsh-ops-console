@@ -408,17 +408,25 @@ window.__ModuleLoader__.load({
           source: '提交',
           version: '版本',
           watchlistEmptyHint: '空列表不会显示假数据；添加监控项后即可查看真实状态。',
-          githubNotInstalled: '未检测到 gh CLI。请先安装 GitHub CLI 并登录，然后刷新连接。',
+          githubNotInstalled: '未检测到 gh CLI。先安装 CLI，再用 gh auth login 登录；插件只读取本机已有登录，不保存 Token。',
           githubNotInstalledHint: 'brew install gh',
-          githubNotAuthenticated: 'gh CLI 已安装但尚未登录。',
+          githubNotAuthenticated: 'gh CLI 已安装但尚未登录。登录后才能读取仓库和 Actions。',
           githubNotAuthenticatedHint: 'gh auth login',
           githubErrorHint: '请检查 gh 的登录状态与网络后重试。',
           githubChecking: '正在检查 GitHub 连接…',
           githubIdle: '尚未检查 GitHub 连接，点击刷新开始。',
-          cloudflareNotInstalled: '未检测到 wrangler。请先安装 Wrangler 并登录，然后刷新连接。',
+          cloudflareNotInstalled: '未检测到 wrangler。先安装 CLI，再用 wrangler login 登录；插件只读取本机已有登录，不保存 Token。',
           cloudflareNotInstalledHint: 'npm install -g wrangler',
-          cloudflareNotAuthenticated: 'wrangler 已安装但尚未登录。',
+          cloudflareNotAuthenticated: 'wrangler 已安装但尚未登录。登录后才能读取 Pages 项目。',
           cloudflareNotAuthenticatedHint: 'wrangler login',
+          installStep: '先在终端运行上面的安装命令。',
+          loginStep: '安装完成后，在终端运行上面的登录命令。',
+          authStep: '按提示在浏览器完成授权。',
+          returnStep: '回到运维台，点下面的按钮重新检测。',
+          retryCheck: '重新检测',
+          loggedInRetry: '我已登录，重新检测',
+          installedRetry: '安装后重新检测',
+          startCheck: '检测连接',
           cloudflareErrorHint: '请检查 wrangler 登录状态与网络后重试。',
           cloudflareChecking: '正在检查 Cloudflare 连接…',
           cloudflareIdle: '尚未检查 Cloudflare 连接，点击刷新开始。',
@@ -844,17 +852,25 @@ window.__ModuleLoader__.load({
           source: 'Commit',
           version: 'Version',
           watchlistEmptyHint: 'Empty lists show no fake data; add an item to see real status.',
-          githubNotInstalled: 'GitHub CLI (gh) was not found. Install it, sign in, then refresh the connection.',
+          githubNotInstalled: 'GitHub CLI (gh) was not found. Install it, then run gh auth login; the plugin only reuses your local login and never stores a token.',
           githubNotInstalledHint: 'brew install gh',
-          githubNotAuthenticated: 'GitHub CLI is installed but not signed in.',
+          githubNotAuthenticated: 'GitHub CLI is installed but not signed in. Sign in to read repositories and Actions.',
           githubNotAuthenticatedHint: 'gh auth login',
           githubErrorHint: 'Check gh auth and network connectivity, then retry.',
           githubChecking: 'Checking the GitHub connection…',
           githubIdle: 'GitHub connection not checked yet. Refresh to start.',
-          cloudflareNotInstalled: 'Wrangler was not found. Install it, sign in, then refresh the connection.',
+          cloudflareNotInstalled: 'Wrangler was not found. Install it, then run wrangler login; the plugin only reuses your local login and never stores a token.',
           cloudflareNotInstalledHint: 'npm install -g wrangler',
-          cloudflareNotAuthenticated: 'Wrangler is installed but not signed in.',
+          cloudflareNotAuthenticated: 'Wrangler is installed but not signed in. Sign in to read Pages projects.',
           cloudflareNotAuthenticatedHint: 'wrangler login',
+          installStep: 'Run the install command above in a terminal.',
+          loginStep: 'After installing, run the login command above in a terminal.',
+          authStep: 'Complete the authorization in the browser.',
+          returnStep: 'Come back here and click the button below to re-check.',
+          retryCheck: 'Check again',
+          loggedInRetry: 'I signed in — check again',
+          installedRetry: 'Installed — check again',
+          startCheck: 'Check connection',
           cloudflareErrorHint: 'Check wrangler auth and network connectivity, then retry.',
           cloudflareChecking: 'Checking the Cloudflare connection…',
           cloudflareIdle: 'Cloudflare connection not checked yet. Refresh to start.',
@@ -3113,34 +3129,77 @@ window.__ModuleLoader__.load({
     }
 
     function HintBlock(props) {
+      const { t } = useI18n();
       return h('div', { className: 'ops-hint-block' },
         h('p', null, props.text),
-        props.code ? h('code', { className: 'ops-code' }, props.code) : null);
+        props.code
+          ? h('div', { className: 'ops-code-row' },
+            h('code', { className: 'ops-code ops-help-command', title: props.code }, props.code),
+            h(CopyButton, { value: props.code, label: t('common.copy') }))
+          : null,
+        props.steps && props.steps.length > 0
+          ? h('ol', { className: 'ops-onboarding-steps' },
+            props.steps.map((step, index) => h('li', { key: index }, step)))
+          : null,
+        props.actionLabel
+          ? h('button', {
+            type: 'button',
+            className: 'ops-btn ops-btn-primary ops-onboarding-action',
+            onClick: props.onAction,
+            disabled: Boolean(props.busy) || typeof props.onAction !== 'function',
+          }, props.busy ? t('common.working') : props.actionLabel)
+          : null);
     }
 
     function PlatformStateHint(props) {
       const { t } = useI18n();
       const prefix = props.kind === 'github' ? 'github' : 'cloudflare';
+      const refreshKey = prefix + '.refresh';
+      const busy = props.ops && props.ops.isBusy(refreshKey);
+      const refresh = () => {
+        if (!props.ops) return;
+        void props.ops.runAction(refreshKey, { type: refreshKey }, {
+          note: t('notes.' + prefix + 'Refreshed'),
+        });
+      };
       if (props.state === 'connected') return null;
       if (props.state === 'not-installed') {
         return h(HintBlock, {
           text: t('platforms.' + prefix + 'NotInstalled'),
           code: t('platforms.' + prefix + 'NotInstalledHint'),
+          steps: [t('platforms.installStep'), t('platforms.loginStep')],
+          actionLabel: t('platforms.installedRetry'),
+          onAction: refresh,
+          busy,
         });
       }
       if (props.state === 'not-authenticated') {
         return h(HintBlock, {
           text: t('platforms.' + prefix + 'NotAuthenticated'),
           code: t('platforms.' + prefix + 'NotAuthenticatedHint'),
+          steps: [t('platforms.loginStep'), t('platforms.authStep'), t('platforms.returnStep')],
+          actionLabel: t('platforms.loggedInRetry'),
+          onAction: refresh,
+          busy,
         });
       }
       if (props.state === 'error') {
-        return h(HintBlock, { text: t('platforms.' + prefix + 'ErrorHint') });
+        return h(HintBlock, {
+          text: t('platforms.' + prefix + 'ErrorHint'),
+          actionLabel: t('platforms.retryCheck'),
+          onAction: refresh,
+          busy,
+        });
       }
       if (props.state === 'checking') {
         return h('p', { className: 'ops-muted' }, t('platforms.' + prefix + 'Checking'));
       }
-      return h('p', { className: 'ops-muted' }, t('platforms.' + prefix + 'Idle'));
+      return h(HintBlock, {
+        text: t('platforms.' + prefix + 'Idle'),
+        actionLabel: t('platforms.startCheck'),
+        onAction: refresh,
+        busy,
+      });
     }
 
     function normalizeRepoInput(value) {
@@ -3343,7 +3402,7 @@ window.__ModuleLoader__.load({
           h('p', { className: 'ops-inline-error' }, errorMessageText(github.error)),
           errorHintText(github.error) ? h('p', { className: 'ops-muted ops-small' }, errorHintText(github.error)) : null)
         : null,
-      h(PlatformStateHint, { kind: 'github', state }),
+      h(PlatformStateHint, { kind: 'github', state, ops: props.ops }),
       state === 'connected' ? h(AddRepoForm, { ops: props.ops }) : null,
       state === 'connected'
         ? (repos.length === 0
@@ -3593,7 +3652,7 @@ window.__ModuleLoader__.load({
           h('p', { className: 'ops-inline-error' }, errorMessageText(cloudflare.error)),
           errorHintText(cloudflare.error) ? h('p', { className: 'ops-muted ops-small' }, errorHintText(cloudflare.error)) : null)
         : null,
-      h(PlatformStateHint, { kind: 'cloudflare', state }),
+      h(PlatformStateHint, { kind: 'cloudflare', state, ops: props.ops }),
       state === 'connected' ? h(AddProjectForm, { ops: props.ops, suggestions }) : null,
       state === 'connected' && addableCatalog.length > 0
         ? h('div', { className: 'ops-catalog' },
@@ -4468,6 +4527,8 @@ window.__ModuleLoader__.load({
 .ops-error-block { display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; border-radius: 8px; background: color-mix(in srgb, var(--ops-error) 8%, transparent); }
 .ops-hint-block { display: flex; flex-direction: column; gap: 5px; padding: 8px 10px; border: 1px solid var(--ops-border); border-radius: 8px; background: var(--ops-layer-2); font-size: 12px; }
 .ops-hint-block p { margin: 0; color: var(--ops-text-secondary); }
+.ops-onboarding-steps { margin: 2px 0 0; padding-left: 18px; color: var(--ops-text-secondary); display: flex; flex-direction: column; gap: 2px; }
+.ops-onboarding-action { align-self: flex-start; }
 .ops-code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 11.5px; background: var(--ops-layer-2); border: 1px solid var(--ops-border);
