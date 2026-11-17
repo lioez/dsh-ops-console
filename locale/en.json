@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Ops console",
+    "description": "A local operations console for GitHub, Cloudflare and SSH servers, plus website checks from mainland China and overseas probes with latency and TLS details. Read-only monitoring; commands run locally and no password or token is stored. Open it from the Ops console entry in the left sidebar."
+  }
+}

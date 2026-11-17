@@ -1,0 +1,10 @@
+# Bundle patch for dsh-ops-console.
+#
+# The Host half owns the state, the probes and the two authenticated /api
+# routes; the Client half owns the sidebar entry and the console page.
+# Configuration lives in $DSH_HOME/ops-console/config.json, not in this row,
+# so changing the watchlist never restarts the plugin.
+- insert:
+    - id: ops-console
+      name: 'dsh-ops-console'
+      config: {}

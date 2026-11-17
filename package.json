@@ -1,0 +1,75 @@
+{
+  "name": "dsh-ops-console",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A local operations console for DeepSeek Harness: GitHub, Cloudflare, SSH servers and multi-region website checks. · 本机运维台：GitHub、Cloudflare、SSH 服务器与国内外网站探测。",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "ops",
+    "monitoring",
+    "ssh",
+    "cloudflare",
+    "github",
+    "globalping"
+  ],
+  "license": "MIT",
+  "author": "Lioez",
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "src/**/*.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md",
+    "test",
+    "docs",
+    "README.en.md",
+    "CHANGELOG.md",
+    "SECURITY.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test test/",
+    "check": "node --check index.js && node --check client.js && node --check src/routes.js && node --check src/monitor.js"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-sidebar",
+        "@deepseek-ai/dsh-client-locale"
+      ]
+    },
+    "engines": {
+      "dsh": ">=0.2.2-rc.3"
+    }
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lioez/dsh-ops-console.git"
+  },
+  "homepage": "https://github.com/lioez/dsh-ops-console#readme",
+  "bugs": {
+    "url": "https://github.com/lioez/dsh-ops-console/issues"
+  }
+}
