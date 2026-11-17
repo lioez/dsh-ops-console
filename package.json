@@ -38,7 +38,8 @@
     "README.en.md",
     "CHANGELOG.md",
     "SECURITY.md",
-    "LICENSE"
+    "LICENSE",
+    "screenshots.json"
   ],
   "scripts": {
     "test": "node --test test/*.test.js",
