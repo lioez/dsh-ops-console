@@ -296,7 +296,7 @@ window.__ModuleLoader__.load({
           failedUnits: '失败服务',
           failedUnitsHint: '有失败的服务，请检查 systemd',
           failedUnitsValue: '{n} 项',
-          formHint: '私钥留空时由 ssh 自己读取 ~/.ssh/config、默认密钥和 ssh-agent；用户留空时使用本机用户名（通常是 loez，不一定是 root）。macOS 可点「选择文件…」选择。',
+          formHint: '私钥留空时由 ssh 自己读取 ~/.ssh/config、默认密钥和 ssh-agent；用户留空时使用本机登录用户名（不是默认 root）。macOS 可点「选择文件…」选择。',
           pickKey: '选择文件…',
           pickKeyBusy: '选择中…',
           pickKeyHint: 'macOS 会打开系统文件选择器；其他系统请手动填写路径。',

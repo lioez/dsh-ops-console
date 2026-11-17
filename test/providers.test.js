@@ -107,7 +107,7 @@ test('Cloudflare detection and account selection', async () => {
     '--version': result('4.164.0\n'),
     whoami: result(JSON.stringify({
       loggedIn: true,
-      email: 'loez@example.com',
+      email: 'alice@example.com',
       accounts: [
         { id: 'acc-1', name: 'One' },
         { id: 'acc-2', name: 'Two' },
