@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 — 2026-11-17
 
 - Added a visible status guide and per-site reasons so "degraded" is explained in place.
 - Added a native macOS private-key file picker for new SSH servers.

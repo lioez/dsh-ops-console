@@ -22,7 +22,7 @@ export const LOCAL_MAX_BODY_BYTES = 256 * 1024
 /** Redirect hops followed. */
 export const LOCAL_MAX_REDIRECTS = 5
 
-const USER_AGENT = 'dsh-ops-console/0.1'
+const USER_AGENT = 'dsh-ops-console/0.2'
 
 /**
  * @param {number} ms

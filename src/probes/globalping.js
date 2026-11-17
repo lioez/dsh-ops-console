@@ -17,7 +17,7 @@
 export const GLOBALPING_API = 'https://api.globalping.io'
 /** Hard cap on probes for one measurement. */
 export const GLOBALPING_MAX_PROBES = 8
-const USER_AGENT = 'dsh-ops-console/0.1'
+const USER_AGENT = 'dsh-ops-console/0.2'
 
 /**
  * @param {number} ms

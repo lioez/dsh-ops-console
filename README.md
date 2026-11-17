@@ -120,6 +120,10 @@ Host 不引入任何 DSH 内部包，只用 Node 内置模块；Client 只使用
 
 路由通过 `ctx.connection.fetch.register` 注册，认证由 DSH 内核完成。
 
+## 版本
+
+版本号写在 `package.json` 和 `index.js` 的 `VERSION`。每次推送都必须递增：修复/文档/小调整用 patch，新功能用 minor，破坏性变更用 major。CI 的 `version-bump` 工作流会检查 `package.json` 是否相对上一提交发生变化。
+
 ## 测试
 
 ```bash

@@ -42,7 +42,7 @@ afterEach(async () => {
 })
 
 function actionRoute() {
-  return buildRoutes({ store, monitor, version: '0.1.0' })[1]
+  return buildRoutes({ store, monitor, version: '0.2.0' })[1]
 }
 
 async function action(body) {
@@ -57,12 +57,12 @@ async function action(body) {
 const tick = () => new Promise((resolve) => setImmediate(resolve))
 
 test('snapshot route returns a complete empty shape', async () => {
-  const route = buildRoutes({ store, monitor, version: '0.1.0' })[0]
+  const route = buildRoutes({ store, monitor, version: '0.2.0' })[0]
   const response = await route.fetch(new Request('http://localhost/api/ops-console/snapshot'))
   assert.equal(response.status, 200)
   const body = await response.json()
   assert.equal(body.ok, true)
-  assert.equal(body.plugin.version, '0.1.0')
+  assert.equal(body.plugin.version, '0.2.0')
   assert.deepEqual(body.sites, [])
   assert.deepEqual(body.servers, [])
   assert.equal(body.github.state, 'idle')

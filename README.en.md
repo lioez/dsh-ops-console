@@ -102,6 +102,10 @@ removed from monitored URLs before sending a target to Globalping. Remote writes
 - Manual: [itdog](https://www.itdog.cn/http/) deep link. itdog has no public API;
   the plugin does not scrape it or embed it in an iframe.
 
+## Versioning
+
+The version lives in `package.json` and `index.js` (`VERSION`). Every push must bump it: patch for fixes/docs, minor for features, major for breaking changes. The `version-bump` workflow checks that `package.json` differs from the previous commit.
+
 ## Test
 
 ```bash
