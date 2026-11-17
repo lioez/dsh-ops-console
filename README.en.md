@@ -25,7 +25,8 @@ The screenshot uses `example.com`; real configuration stays on your machine.
 - Servers: read-only SSH status — hostname, OS, uptime, load, memory, disk,
   failed systemd units and Docker container count.
 - Platforms: GitHub login and watched-repository Actions/PR summaries; Cloudflare
-  account, Pages projects and recent deployments.
+  account, Pages projects and recent deployments. Repository and project cards
+  stay collapsed until Details is opened.
 - Settings: monitor interval, CN probe count, overseas countries, Globalping
   quota, data directory and cache controls.
 

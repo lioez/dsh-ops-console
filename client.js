@@ -372,6 +372,7 @@ window.__ModuleLoader__.load({
           cloudflareAddPlaceholder: '项目名',
           cloudflareAddSubmit: '添加项目',
           cloudflareTitle: 'Cloudflare',
+          cloudflareProjects: '监控的项目',
           connection: '连接状态',
           dashboard: '打开仪表盘',
           discovered: '已发现但未监控的项目',
@@ -807,6 +808,7 @@ window.__ModuleLoader__.load({
           cloudflareAddPlaceholder: 'Project name',
           cloudflareAddSubmit: 'Add project',
           cloudflareTitle: 'Cloudflare',
+          cloudflareProjects: 'Watched projects',
           connection: 'Connection',
           dashboard: 'Open dashboard',
           discovered: 'Discovered, not monitored',
@@ -3205,10 +3207,57 @@ window.__ModuleLoader__.load({
       const [expanded, setExpanded] = useState(false);
       const busyRemove = props.ops.isBusy('github.repo.remove:' + id);
       const displayName = info.nameWithOwner || repo.repo || id;
-      const visibleRuns = expanded ? runs : runs.slice(0, 3);
       const remove = () => props.ops.runAction('github.repo.remove:' + id, { type: 'github.repo.remove', id }, {
         note: t('notes.repoRemoved'),
       });
+
+      const runsSection = h('div', { className: 'ops-subsection' },
+        h('div', { className: 'ops-subhead' },
+          h('h4', { className: 'ops-subtitle' }, t('platforms.latestRuns')),
+          h('span', { className: 'ops-muted ops-small' }, String(runs.length))),
+        runs.length === 0
+          ? h('p', { className: 'ops-muted' }, t('platforms.runsEmpty'))
+          : h('ul', { className: 'ops-run-list' },
+            runs.map((run, index) => h('li', {
+              key: run && run.id !== undefined ? String(run.id) : index,
+              className: 'ops-run',
+            },
+            h(RunStatePill, { value: (run && (run.conclusion || run.status)) || 'unknown' }),
+            h('div', { className: 'ops-run-main' },
+              h(ExtLink, {
+                href: run && run.url,
+                className: 'ops-link ops-run-title',
+                title: run && run.title,
+              }, (run && (run.title || run.workflow)) || t('common.unknown')),
+              h('span', {
+                className: 'ops-muted ops-small',
+                title: run ? formatAbsolute(locale, toTimestamp(run.createdAt)) : '',
+              }, [
+                run && run.workflow ? String(run.workflow) : '',
+                run && run.branch ? String(run.branch) : '',
+                run ? formatRelative(t, toTimestamp(run.createdAt), props.now) : '',
+              ].filter(Boolean).join(' · ')))))));
+
+      const prsSection = h('div', { className: 'ops-subsection' },
+        h('div', { className: 'ops-subhead' },
+          h('h4', { className: 'ops-subtitle' }, t('platforms.openPRs')),
+          h('span', { className: 'ops-muted ops-small' },
+            t('platforms.openPRsCount', { n: isFiniteNumber(openPRs.count) ? openPRs.count : prItems.length }))),
+        prItems.length === 0
+          ? h('p', { className: 'ops-muted' }, t('platforms.openPRsEmpty'))
+          : h('ul', { className: 'ops-pr-list' },
+            prItems.map((pr, index) => h('li', {
+              key: pr && pr.number !== undefined ? String(pr.number) : index,
+            },
+            h(ExtLink, { href: pr && pr.url, className: 'ops-link' },
+              '#' + String((pr && pr.number) || index + 1) + ' ' + String((pr && pr.title) || '')),
+            h('span', {
+              className: 'ops-muted ops-small',
+              title: pr ? formatAbsolute(locale, toTimestamp(pr.updatedAt)) : '',
+            }, pr ? formatRelative(t, toTimestamp(pr.updatedAt), props.now) : '')))),
+        h('p', { className: 'ops-muted ops-small' },
+          t('platforms.lastFetched') + ' ' + formatAbsolute(locale, repo.fetchedAt)));
+
       return h('article', { className: 'ops-card ops-item-card ops-repo-card' },
         h('div', { className: 'ops-item-head' },
           h('div', { className: 'ops-item-title-wrap' },
@@ -3225,7 +3274,8 @@ window.__ModuleLoader__.load({
                 title: info.url || repo.repo,
               }, String(repo.repo || displayName)),
               h('span', { className: 'ops-dot-sep', 'aria-hidden': 'true' }),
-              h('span', { className: 'ops-muted ops-small' }, t('platforms.openPRsCount', { n: isFiniteNumber(openPRs.count) ? openPRs.count : prItems.length })),
+              h('span', { className: 'ops-muted ops-small' },
+                t('platforms.openPRsCount', { n: isFiniteNumber(openPRs.count) ? openPRs.count : prItems.length })),
               h('span', { className: 'ops-dot-sep', 'aria-hidden': 'true' }),
               h('span', {
                 className: 'ops-muted ops-small',
@@ -3247,46 +3297,7 @@ window.__ModuleLoader__.load({
         repo.state === 'error' && repo.error
           ? h('p', { className: 'ops-inline-error' }, errorMessageText(repo.error))
           : null,
-        h('div', { className: 'ops-subsection' },
-          h('h4', { className: 'ops-subtitle' }, t('platforms.latestRuns')),
-          runs.length === 0
-            ? h('p', { className: 'ops-muted' }, t('platforms.runsEmpty'))
-            : h('ul', { className: 'ops-run-list' },
-              visibleRuns.map((run, index) => h('li', { key: run && run.id !== undefined ? String(run.id) : index, className: 'ops-run' },
-                h(RunStatePill, { value: (run && (run.conclusion || run.status)) || 'unknown' }),
-                h('div', { className: 'ops-run-main' },
-                  h(ExtLink, {
-                    href: run && run.url,
-                    className: 'ops-link ops-run-title',
-                    title: run && run.title,
-                  }, (run && (run.title || run.workflow)) || t('common.unknown')),
-                  h('span', {
-                    className: 'ops-muted ops-small',
-                    title: run ? formatAbsolute(locale, toTimestamp(run.createdAt)) : '',
-                  }, [
-                      run && run.workflow ? String(run.workflow) : '',
-                      run && run.branch ? String(run.branch) : '',
-                      run ? formatRelative(t, toTimestamp(run.createdAt), props.now) : '',
-                    ].filter(Boolean).join(' · ')))))),
-        expanded
-          ? h('div', { className: 'ops-subsection' },
-            h('div', { className: 'ops-subhead' },
-              h('h4', { className: 'ops-subtitle' }, t('platforms.openPRs')),
-              h('span', { className: 'ops-muted ops-small' },
-                t('platforms.openPRsCount', { n: isFiniteNumber(openPRs.count) ? openPRs.count : prItems.length }))),
-            prItems.length === 0
-              ? h('p', { className: 'ops-muted' }, t('platforms.openPRsEmpty'))
-              : h('ul', { className: 'ops-pr-list' },
-                prItems.map((pr, index) => h('li', { key: pr && pr.number !== undefined ? String(pr.number) : index },
-                  h(ExtLink, { href: pr && pr.url, className: 'ops-link' },
-                    '#' + String((pr && pr.number) || index + 1) + ' ' + String((pr && pr.title) || '')),
-                  h('span', {
-                    className: 'ops-muted ops-small',
-                    title: pr ? formatAbsolute(locale, toTimestamp(pr.updatedAt)) : '',
-                  }, pr ? formatRelative(t, toTimestamp(pr.updatedAt), props.now) : '')))),
-            h('p', { className: 'ops-muted ops-small' },
-              t('platforms.lastFetched') + ' ' + formatAbsolute(locale, repo.fetchedAt)))
-          : null));
+        expanded ? h(Fragment, null, runsSection, prsSection) : null);
     }
 
     function GithubCard(props) {
@@ -3338,14 +3349,18 @@ window.__ModuleLoader__.load({
         ? (repos.length === 0
           ? h(EmptyState, { title: t('platforms.repoEmpty') },
             h('p', null, t('platforms.watchlistEmptyHint')))
-          : h('div', { className: 'ops-list ops-platform-list' },
-            repos.map((repo) => h(GithubRepoCard, {
-              key: repo.id,
-              repo,
-              ops: props.ops,
-              now: props.now,
-              locale,
-            }))))
+          : h('div', { className: 'ops-platform-section' },
+            h('div', { className: 'ops-subhead' },
+              h('h4', { className: 'ops-subtitle' }, t('platforms.githubRepos')),
+              h('span', { className: 'ops-muted ops-small' }, String(repos.length))),
+            h('div', { className: 'ops-list ops-platform-list' },
+              repos.map((repo) => h(GithubRepoCard, {
+                key: repo.id,
+                repo,
+                ops: props.ops,
+                now: props.now,
+                locale,
+              })))))
         : null);
     }
 
@@ -3413,11 +3428,48 @@ window.__ModuleLoader__.load({
       const domains = asArray(project.domains);
       const busyRemove = props.ops.isBusy('cloudflare.project.remove:' + id);
       const [expanded, setExpanded] = useState(false);
-      const visibleDeployments = expanded ? deployments : deployments.slice(0, 4);
       const remove = () => props.ops.runAction('cloudflare.project.remove:' + id, {
         type: 'cloudflare.project.remove',
         id,
       }, { note: t('notes.projectRemoved') });
+
+      const deploymentsSection = h('div', { className: 'ops-subsection' },
+        h('div', { className: 'ops-subhead' },
+          h('h4', { className: 'ops-subtitle' }, t('platforms.deployments')),
+          h('span', {
+            className: 'ops-muted ops-small',
+            title: formatAbsolute(locale, project.fetchedAt),
+          }, t('platforms.lastFetched') + ' ' + formatRelative(t, project.fetchedAt, props.now))),
+        deployments.length === 0
+          ? h('p', { className: 'ops-muted' }, t('platforms.deploymentsEmpty'))
+          : h('div', { className: 'ops-table-wrap' },
+            h('table', { className: 'ops-table' },
+              h('thead', null, h('tr', null,
+                h('th', null, t('platforms.environment')),
+                h('th', null, t('platforms.branch')),
+                h('th', null, t('platforms.source')),
+                h('th', null, t('platforms.deploymentUrl')),
+                h('th', null, t('platforms.buildLink')),
+                h('th', null, t('common.time')))),
+              h('tbody', null, deployments.map((deployment, index) => h('tr', {
+                key: deployment && deployment.id !== undefined ? String(deployment.id) : index,
+              },
+              h('td', null, h(Pill, {
+                tone: deployment && deployment.environment && /prod/i.test(String(deployment.environment)) ? 'success' : 'idle',
+              }, deployment && deployment.environment ? String(deployment.environment) : '—')),
+              h('td', { className: 'ops-mono' }, deployment && deployment.branch ? String(deployment.branch) : '—'),
+              h('td', { className: 'ops-mono' }, deployment && deployment.source ? String(deployment.source) : '—'),
+              h('td', { className: 'ops-cell-url' },
+                deployment && deployment.url
+                  ? h(ExtLink, { href: deployment.url, className: 'ops-link', title: String(deployment.url) }, String(deployment.url))
+                  : '—'),
+              h('td', null, deployment && deployment.buildUrl
+                ? h(ExtLink, { href: deployment.buildUrl, className: 'ops-link' }, t('platforms.buildLink'))
+                : '—'),
+              h('td', { className: 'ops-muted' }, deployment && deployment.statusText ? String(deployment.statusText) : '—')))))),
+        h('p', { className: 'ops-muted ops-small' },
+          t('platforms.lastFetched') + ' ' + formatAbsolute(locale, project.fetchedAt)));
+
       return h('article', { className: 'ops-card ops-item-card ops-project-card' },
         h('div', { className: 'ops-item-head' },
           h('div', { className: 'ops-item-title-wrap' },
@@ -3458,43 +3510,7 @@ window.__ModuleLoader__.load({
         project.state === 'error' && project.error
           ? h('p', { className: 'ops-inline-error' }, errorMessageText(project.error))
           : null,
-        h('div', { className: 'ops-subsection' },
-          h('div', { className: 'ops-subhead' },
-            h('h4', { className: 'ops-subtitle' }, t('platforms.deployments')),
-            h('span', {
-              className: 'ops-muted ops-small',
-              title: formatAbsolute(locale, project.fetchedAt),
-            }, t('platforms.lastFetched') + ' ' + formatRelative(t, project.fetchedAt, props.now))),
-          deployments.length === 0
-            ? h('p', { className: 'ops-muted' }, t('platforms.deploymentsEmpty'))
-            : h('div', { className: 'ops-table-wrap' },
-              h('table', { className: 'ops-table' },
-                h('thead', null, h('tr', null,
-                  h('th', null, t('platforms.environment')),
-                  h('th', null, t('platforms.branch')),
-                  h('th', null, t('platforms.source')),
-                  h('th', null, t('platforms.deploymentUrl')),
-                  h('th', null, t('platforms.buildLink')),
-                  h('th', null, t('common.time')))),
-                h('tbody', null, visibleDeployments.map((deployment, index) => h('tr', {
-                  key: deployment && deployment.id !== undefined ? String(deployment.id) : index,
-                },
-                h('td', null, h(Pill, { tone: deployment && deployment.environment && /prod/i.test(String(deployment.environment)) ? 'success' : 'idle' },
-                  deployment && deployment.environment ? String(deployment.environment) : '—')),
-                h('td', { className: 'ops-mono' }, deployment && deployment.branch ? String(deployment.branch) : '—'),
-                h('td', { className: 'ops-mono' }, deployment && deployment.source ? String(deployment.source) : '—'),
-                h('td', { className: 'ops-cell-url' },
-                  deployment && deployment.url
-                    ? h(ExtLink, { href: deployment.url, className: 'ops-link', title: String(deployment.url) }, String(deployment.url))
-                    : '—'),
-                h('td', null, deployment && deployment.buildUrl
-                  ? h(ExtLink, { href: deployment.buildUrl, className: 'ops-link' }, t('platforms.buildLink'))
-                  : '—'),
-                h('td', { className: 'ops-muted' }, deployment && deployment.statusText ? String(deployment.statusText) : '—')))))),
-        expanded
-          ? h('p', { className: 'ops-muted ops-small' },
-            t('platforms.lastFetched') + ' ' + formatAbsolute(locale, project.fetchedAt))
-          : null));
+        expanded ? deploymentsSection : null);
     }
 
     function CloudflareCard(props) {
@@ -3600,19 +3616,23 @@ window.__ModuleLoader__.load({
         ? (projects.length === 0
           ? h(EmptyState, { title: t('platforms.projectEmpty') },
             h('p', null, t('platforms.watchlistEmptyHint')))
-          : h('div', { className: 'ops-list ops-platform-list' },
-            projects.map((project) => h(CloudflareProjectCard, {
-              key: project.id,
-              project,
-              ops: props.ops,
-              now: props.now,
-              locale,
-            }))))
+          : h('div', { className: 'ops-platform-section' },
+            h('div', { className: 'ops-subhead' },
+              h('h4', { className: 'ops-subtitle' }, t('platforms.cloudflareProjects')),
+              h('span', { className: 'ops-muted ops-small' }, String(projects.length))),
+            h('div', { className: 'ops-list ops-platform-list' },
+              projects.map((project) => h(CloudflareProjectCard, {
+                key: project.id,
+                project,
+                ops: props.ops,
+                now: props.now,
+                locale,
+              })))))
         : null);
     }
 
     function PlatformsTab(props) {
-      return h('div', { className: 'ops-tab-body' },
+      return h('div', { className: 'ops-tab-body ops-platforms' },
         h(GithubCard, { snapshot: props.snapshot, ops: props.ops, now: props.now }),
         h(CloudflareCard, { snapshot: props.snapshot, ops: props.ops, now: props.now }));
     }
@@ -4513,10 +4533,15 @@ polyline.ops-spark-line.ops-spark-globalMs { stroke: var(--ops-success); }
 }
 
 /* Platforms */
+.ops-platforms { gap: 18px; }
 .ops-platform-card { scroll-margin-top: 12px; }
+.ops-platform-card .ops-card-head { padding-bottom: 8px; border-bottom: 1px solid var(--ops-border); }
+.ops-platform-card .ops-card-body { gap: 12px; }
+.ops-platform-section { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--ops-border); padding-top: 10px; }
 .ops-platform-status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .ops-platform-add { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--ops-border); padding-top: 10px; }
-.ops-platform-list .ops-item-card { background: var(--ops-bg); }
+.ops-platform-list { gap: 12px; }
+.ops-platform-list .ops-item-card { background: var(--ops-layer-2); border-color: var(--ops-border); }
 .ops-domain-list { display: inline-flex; flex-wrap: wrap; gap: 4px 10px; }
 .ops-run-list, .ops-pr-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
 .ops-run { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }

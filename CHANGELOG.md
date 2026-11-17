@@ -10,6 +10,7 @@
 - Preserved the add-server form draft across tab switches; passwords are never stored.
 - Collapsed server cards to address, status and a one-line summary; full metrics moved under Details.
 - Added an optional mainland-China city filter for Globalping probes.
+- Platforms: repository and Pages project cards are collapsed by default; expanded details stay behind the Details button, and section headers/borders separate the page blocks.
 - Added SSH key-management help and a copyable host-key verification command.
 - Explained that Globalping's anonymous quota is counted per public egress IP, not per account.
 - Cancelled probes no longer overwrite the previous site result with a false down/degraded state.

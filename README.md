@@ -19,7 +19,7 @@
 | 总览 | 站点在线/异常、国内/海外中位延迟、服务器在线数、GitHub/Cloudflare 连接状态 |
 | 网站 | 添加/删除站点，手动或定时检测；本机 + 国内 + 海外三组结果；TLS 到期天数；历史与可用率 |
 | 服务器 | 添加 SSH 目标，读取 hostname / OS / uptime / load / 内存 / 磁盘 / failed units / Docker 容器数 |
-| 平台 | GitHub 账号与监听仓库的最近 Actions、PR 数；Cloudflare 账号、Pages 项目与最近部署 |
+| 平台 | GitHub 账号与监听仓库的最近 Actions、PR 数；Cloudflare 账号、Pages 项目与最近部署；仓库/项目卡片默认折叠 |
 | 设置 | 监控间隔、国内探测节点数/城市、海外国家、Globalping 额度、数据目录、清空历史 |
 
 ## 安装
