@@ -199,7 +199,7 @@ window.__ModuleLoader__.load({
           statServers: '服务器在线',
           statServersHint: '共 {n} 台',
           statSites: '网站',
-          statSitesHint: '正常 {up} · 异常 {down}',
+          statSitesHint: '正常 {up} · 需关注 {down}',
         },
         sites: {
           addBusy: '添加中…',
@@ -622,7 +622,7 @@ window.__ModuleLoader__.load({
           statServers: 'Servers online',
           statServersHint: '{n} total',
           statSites: 'Websites',
-          statSitesHint: '{up} up · {down} down',
+          statSitesHint: '{up} up · {down} need attention',
         },
         sites: {
           addBusy: 'Adding…',
