@@ -249,7 +249,7 @@ export function classifySshError(result, server = null) {
     }
   }
   if (/Permission denied|publickey|no supported authentication/iu.test(haystack)) {
-    return { code: 'auth', message: 'SSH 认证失败', hint: '确认密钥已加入 ssh-agent 或 ~/.ssh/config，并且该用户允许登录。', command: server ? sshCommandFor(server) : '' }
+    return { code: 'auth', message: 'SSH 认证失败', hint: '确认公钥已写入远端用户的 ~/.ssh/authorized_keys，并确认「用户」填写正确；留空会用本机用户名。', command: server ? sshCommandFor(server) : '' }
   }
   if (/Could not resolve hostname|Name or service not known|nodename nor servname/iu.test(haystack)) {
     return { code: 'dns', message: '无法解析服务器地址', hint: '检查 ssh 别名或域名。', command: server ? sshCommandFor(server) : '' }

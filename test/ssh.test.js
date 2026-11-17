@@ -143,6 +143,6 @@ test('a failed ssh call returns an offline result with a diagnosis', async () =>
   const result = await probeServer({ target: 'vps01' }, { run })
   assert.equal(result.status, 'offline')
   assert.equal(result.error.code, 'auth')
-  assert.match(result.error.hint, /ssh-agent|\.ssh\/config/u)
+  assert.match(result.error.hint, /authorized_keys|用户/u)
   assert.match(result.error.command, /^ssh /u)
 })
