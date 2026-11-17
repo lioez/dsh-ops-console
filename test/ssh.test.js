@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
@@ -106,6 +107,26 @@ test('probeServer returns online or warning without throwing', async () => {
   })
   const warning = await probeServer({ target: 'vps01' }, { run: warningRun })
   assert.equal(warning.status, 'warning')
+})
+
+test('an overly permissive private key is rejected before ssh with a chmod command', async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'ops-key-'))
+  const key = path.join(dir, 'id_ed25519')
+  await fs.writeFile(key, 'not a real key')
+  await fs.chmod(key, 0o644)
+  let ran = false
+  try {
+    const result = await probeServer({ target: 'vps01', identityFile: key }, {
+      run: async () => { ran = true; return { ok: true, installed: true, stdout: output, stderr: '', code: 0, error: '' } },
+    })
+    assert.equal(ran, false)
+    assert.equal(result.status, 'offline')
+    assert.equal(result.error.code, 'key_permissions')
+    assert.match(result.error.message, /644/u)
+    assert.match(result.error.command, /^chmod 600 /u)
+  } finally {
+    await fs.rm(dir, { recursive: true, force: true })
+  }
 })
 
 test('a failed ssh call returns an offline result with a diagnosis', async () => {

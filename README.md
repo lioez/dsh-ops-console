@@ -66,6 +66,8 @@ plugin_manager install_bundle → target: /absolute/path/to/dsh-ops-console
 
 - **私钥路径留空时**：`ssh` 自己会读取 `~/.ssh/config`、默认密钥（`~/.ssh/id_*`）和 ssh-agent。插件不读取这些文件，也不保存密码。
 - **macOS**：添加服务器时可点「选择文件…」打开系统文件选择器；其他平台请手动填写路径。
+- **权限**：私钥必须仅本人可读（`chmod 600`）。权限过宽时 `ssh` 会忽略密钥，插件会直接给出可复制的 `chmod` 命令。
+- **用户**：留空时 `ssh` 使用本机用户名，不是默认 root；请按远端实际用户填写（例如 `root`、`ubuntu`）。
 - 查看本机配置：`ls -la ~/.ssh`、`ssh-add -l`、`ssh -G <目标别名>`。
 - 把密钥加入 agent：`ssh-add ~/.ssh/id_ed25519`（macOS 可用 `ssh-add --apple-use-keychain`）。
 - 主机密钥未验证时，服务器详情会给出可复制的 `ssh ...` 命令；在终端运行一次、确认指纹后重试。插件不会自动关闭 host-key 校验。

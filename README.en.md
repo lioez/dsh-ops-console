@@ -69,6 +69,8 @@ The Sites tab contains the same guide, and status pills carry the definition as 
 
 - With an empty identity path, `ssh` itself uses `~/.ssh/config`, default keys (`~/.ssh/id_*`) and ssh-agent. The plugin does not read those files and never stores passwords.
 - On macOS, **Choose file…** opens the system file chooser. Other platforms need a typed path.
+- A private key must be owner-only (`chmod 600`). When it is too permissive, `ssh` ignores it and the plugin returns a copyable `chmod` command.
+- An empty user uses the local account name, not root by default; set the remote user explicitly (`root`, `ubuntu`, etc.).
 - Inspect `ls -la ~/.ssh`, `ssh-add -l`, and `ssh -G <alias>`.
 - Add a key with `ssh-add ~/.ssh/id_ed25519` (macOS may use `--apple-use-keychain`).
 - When the host key is not verified, server details show a copyable `ssh ...` command. Run it once, confirm the fingerprint, then retry. The plugin never disables host-key checking.

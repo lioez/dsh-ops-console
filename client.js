@@ -296,7 +296,7 @@ window.__ModuleLoader__.load({
           failedUnits: '失败服务',
           failedUnitsHint: '有失败的服务，请检查 systemd',
           failedUnitsValue: '{n} 项',
-          formHint: '私钥留空时由 ssh 自己读取 ~/.ssh/config、默认密钥和 ssh-agent；插件不读取这些文件，也不保存密码。',
+          formHint: '私钥留空时由 ssh 自己读取 ~/.ssh/config、默认密钥和 ssh-agent；用户留空时使用本机用户名（通常是 loez，不一定是 root）。macOS 可点「选择文件…」选择。',
           pickKey: '选择文件…',
           pickKeyBusy: '选择中…',
           pickKeyHint: 'macOS 会打开系统文件选择器；其他系统请手动填写路径。',
@@ -719,7 +719,7 @@ window.__ModuleLoader__.load({
           failedUnits: 'Failed units',
           failedUnitsHint: 'Some systemd units failed',
           failedUnitsValue: '{n}',
-          formHint: 'When the identity path is empty, ssh resolves ~/.ssh/config, default keys and ssh-agent itself; the plugin does not read those files and never stores passwords.',
+          formHint: 'With an empty identity path, ssh resolves ~/.ssh/config, default keys and ssh-agent itself. With an empty user, ssh uses the local account name (not necessarily root). On macOS, use Choose file… to pick a key.',
           pickKey: 'Choose file…',
           pickKeyBusy: 'Choosing…',
           pickKeyHint: 'macOS opens the system file chooser; other platforms need a typed path.',
@@ -2700,7 +2700,7 @@ window.__ModuleLoader__.load({
               disabled: busy,
               inputMode: 'numeric',
             })),
-          h(Field, { label: t('servers.identityLabel'), className: 'ops-field-grow', hint: t('servers.pickKeyHint') },
+          h(Field, { label: t('servers.identityLabel'), className: 'ops-field-grow-2' },
             h('div', { className: 'ops-input-with-button' },
               h('input', {
                 className: 'ops-input',
@@ -2792,7 +2792,7 @@ window.__ModuleLoader__.load({
       const error = asObject(props.error);
       if (typeof error.command !== 'string' || error.command === '') return null;
       return h('div', { className: 'ops-ssh-command' },
-        h('p', { className: 'ops-muted ops-small' }, t('servers.verifyCommandHint')),
+        h('p', { className: 'ops-muted ops-small' }, error.commandHint || t('servers.verifyCommandHint')),
         h('div', { className: 'ops-code-row' },
           h('code', { className: 'ops-code ops-help-command', title: error.command }, error.command),
           h(CopyButton, { value: error.command, label: t('common.copy') })));
@@ -4145,6 +4145,9 @@ window.__ModuleLoader__.load({
 .ops-switch-label { white-space: nowrap; }
 
 /* Forms */
+.ops-input-with-button { display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1 1 auto; }
+.ops-input-with-button .ops-input { flex: 1 1 auto; min-width: 0; width: auto; }
+.ops-input-with-button .ops-btn { flex: none; white-space: nowrap; }
 .ops-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
 .ops-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 0 0 auto; }
 .ops-field-label { font-size: 11.5px; color: var(--ops-text-secondary); }

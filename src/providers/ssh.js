@@ -9,6 +9,8 @@
  * @module dsh-ops-console/src/providers/ssh
  */
 
+import fs from 'node:fs/promises'
+
 import { commandFailure, runCli } from '../cli.js'
 import { expandHome } from '../paths.js'
 
@@ -86,6 +88,53 @@ export function sshCommandFor(server) {
   const destination = typeof server?.user === 'string' && server.user !== '' ? `${server.user}@${target}` : target
   args.push(shellQuote(destination))
   return args.join(' ')
+}
+
+/**
+ * A file-mode check before ssh runs. OpenSSH ignores private keys readable by
+ * other users, and on macOS it then falls back to a password prompt, which the
+ * plugin cannot answer under BatchMode. Returning the precise chmod command is
+ * more useful than a generic authentication failure.
+ *
+ * @param {object} server
+ * @returns {Promise<null|{ code: string, message: string, hint: string, command: string, commandHint: string }>}
+ */
+async function keyPermissionIssue(server) {
+  const raw = typeof server?.identityFile === 'string' ? server.identityFile.trim() : ''
+  if (raw === '') return null
+  const keyPath = expandHome(raw)
+  let stat
+  try {
+    stat = await fs.stat(keyPath)
+  } catch {
+    return {
+      code: 'key_missing',
+      message: '找不到私钥文件',
+      hint: '检查私钥路径是否仍然存在，或者重新选择文件。',
+      command: `ls -l ${shellQuote(keyPath)}`,
+      commandHint: '终端检查命令',
+    }
+  }
+  if (!stat.isFile()) {
+    return {
+      code: 'key_not_file',
+      message: '私钥路径不是普通文件',
+      hint: '请选择 SSH 私钥文件本身，而不是目录。',
+      command: `ls -ld ${shellQuote(keyPath)}`,
+      commandHint: '终端检查命令',
+    }
+  }
+  if (process.platform !== 'win32' && (stat.mode & 0o077) !== 0) {
+    const mode = (stat.mode & 0o777).toString(8).padStart(3, '0')
+    return {
+      code: 'key_permissions',
+      message: `私钥权限过宽（${mode}）`,
+      hint: 'SSH 会忽略其他人可读的私钥。先执行下面的 chmod 修复权限，再点「立即检测」。',
+      command: `chmod 600 ${shellQuote(keyPath)}`,
+      commandHint: '终端修复命令',
+    }
+  }
+  return null
 }
 
 /**
@@ -190,6 +239,15 @@ export function classifySshError(result, server = null) {
   if (/Host key verification failed|REMOTE HOST IDENTIFICATION HAS CHANGED/iu.test(haystack)) {
     return { code: 'host_key', message: 'SSH 主机密钥未验证', hint: '在终端运行下面这条命令，确认主机指纹后重试。插件不会自动关闭 host key 校验。', command: server ? sshCommandFor(server) : '' }
   }
+  if (/bad permissions|UNPROTECTED PRIVATE KEY FILE/iu.test(haystack)) {
+    return {
+      code: 'key_permissions',
+      message: 'SSH 私钥权限过宽',
+      hint: 'SSH 会忽略其他人可读的私钥。先执行 chmod 600 修复权限，再点「立即检测」。',
+      command: server && server.identityFile ? `chmod 600 ${shellQuote(expandHome(server.identityFile))}` : '',
+      commandHint: '终端修复命令',
+    }
+  }
   if (/Permission denied|publickey|no supported authentication/iu.test(haystack)) {
     return { code: 'auth', message: 'SSH 认证失败', hint: '确认密钥已加入 ssh-agent 或 ~/.ssh/config，并且该用户允许登录。', command: server ? sshCommandFor(server) : '' }
   }
@@ -215,6 +273,27 @@ export function classifySshError(result, server = null) {
  */
 export async function probeServer(server, options = {}) {
   const started = Date.now()
+  const keyIssue = await keyPermissionIssue(server)
+  if (keyIssue) {
+    return {
+      checkedAt: Date.now(),
+      durationMs: Date.now() - started,
+      status: 'offline',
+      error: keyIssue,
+      raw: '',
+      hostname: '',
+      os: '',
+      kernel: '',
+      uptimeSeconds: null,
+      load: [],
+      cores: null,
+      memory: null,
+      disk: null,
+      failedUnits: null,
+      dockerContainers: null,
+      warnings: [],
+    }
+  }
   const run = options.run ?? runCli
   let result
   try {

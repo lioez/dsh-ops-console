@@ -4,6 +4,8 @@
 
 - Added a visible status guide and per-site reasons so "degraded" is explained in place.
 - Added a native macOS private-key file picker for new SSH servers.
+- Fixed the picker/form layout so the key field and submit button stay on one row.
+- Detect private keys that are too permissive before running ssh and return the exact chmod command.
 - Added SSH key-management help and a copyable host-key verification command.
 - Explained that Globalping's anonymous quota is counted per public egress IP, not per account.
 - Cancelled probes no longer overwrite the previous site result with a false down/degraded state.
