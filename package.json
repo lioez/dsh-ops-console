@@ -41,7 +41,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "test": "node --test test/",
+    "test": "node --test test/*.test.js",
     "check": "node --check index.js && node --check client.js && node --check src/routes.js && node --check src/monitor.js"
   },
   "dsh": {

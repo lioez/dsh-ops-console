@@ -74,7 +74,7 @@ removed from monitored URLs before sending a target to Globalping. Remote writes
 ## Test
 
 ```bash
-node --test test/
+node --test test/*.test.js
 node --check client.js
 ```
 

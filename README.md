@@ -98,7 +98,7 @@ Host 不引入任何 DSH 内部包，只用 Node 内置模块；Client 只使用
 ## 测试
 
 ```bash
-node --test test/
+node --test test/*.test.js
 node --check client.js
 ```
 
